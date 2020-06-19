@@ -1,12 +1,14 @@
 NAME = main
 MY_MODULES = vectors.o
-BUGGY_MODULES = vectors_buggy.o
+BRANCH_MODULES = vectors_branch.o
+LDR_MODULES = vectors_ldr.o
+LDR2_MODULES = vectors_ldr2.o interrupts_ldr2.o
 
 CFLAGS = -I$(CS107E)/include -g -Wall -Og -std=c99 -ffreestanding
 LDFLAGS = -nostdlib -T memmap -L$(CS107E)/lib
 LDLIBS = -lpi
 
-all : $(NAME).elf $(NAME)_buggy.elf $(NAME).list $(NAME)_buggy.list
+all : $(NAME).elf $(NAME)_branch.elf $(NAME)_ldr.elf $(NAME)_ldr2.elf $(NAME).list $(NAME)_branch.list $(NAME)_ldr.list $(NAME)_ldr2.list
 
 %.bin: %.elf
 	arm-none-eabi-objcopy $< -O binary $@
@@ -14,7 +16,13 @@ all : $(NAME).elf $(NAME)_buggy.elf $(NAME).list $(NAME)_buggy.list
 %.elf: %.o $(MY_MODULES) 
 	arm-none-eabi-gcc $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%_buggy.elf: %.o $(BUGGY_MODULES) 
+%_branch.elf: %.o $(BRANCH_MODULES) 
+		arm-none-eabi-gcc $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+%_ldr.elf: %.o $(LDR_MODULES) 
+		arm-none-eabi-gcc $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+%_ldr2.elf: %.o $(LDR2_MODULES) 
 		arm-none-eabi-gcc $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 %.o: %.c

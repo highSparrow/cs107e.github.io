@@ -56,18 +56,22 @@ When you're done with this assignment, you should
 ## How do assignments work?
 The course follows a weekly cadence where material is introduced in the Friday-Monday lectures and lab follows up with hands-on guided practice so that you're ready to tackle the week's assignment. The assignment is released after Wednesday lab and due before Tuesday lab of the next week.  Completing each assignment will solidify your understanding of the week's topics. In addition to being a satisfying accomplishment on its own, the code you write forms a building block that contributes to a library you construct over the course of the quarter. This complete system is an accomplishment of which you will be immensely proud!
 
-Each assignment is structured into a basic part and one or more proposed extensions. Completing the basic part is required. Doing solid work on the basic part puts you on track for earning a B grade. Adding in the optional extensions is what will boost your grade up into the A range. We encourage everyone to try out some of the extensions, they are a fun way to go further with the material and advance your understanding!
+Each assignment is structured into a basic part and one or more proposed extensions. Completing the basic part is required. Doing solid work on the basic part puts you on track for earning a B grade. Adding in the optional extensions is what will boost your grade up into the A range. We encourage everyone to try out some of the extensions; they are a fun way to go further with the material and advance your understanding!
 
 Check out our website pages [assignments](/assignments/#faq) and [course policies](/policies) for more information on assignments, grading, lateness, and collaboration.
 
 #### YEAH! = Your Early Assignment Help
-Shannon will be leading a YEAH session for the assignment Thursday 3-4pm in Gates B21. Come join us and kickstart your work! We'll have a working version to demo and share best practices for success, highlight tricky details, warn of pitfalls to avoid, answer your questions, and more.
+Sean will hold a YEAH session for each assignment every Thursday, during the first hour of his office hours (usually 1pm - 3pm PDT). Come join us and kickstart your work! We'll have a working version to demo and share best practices for success, highlight tricky details, warn of pitfalls to avoid, answer your questions, and more.
+
+This week, YEAH hours will run from 12pm - 1pm PDT since Sean's office hours are shifting (just for this week!). Look out for announcements on Piazza about YEAH hours each week. YEAH
 
 ## Basic part: simple scan pattern
 
 This assignment involves modifying the blink program showed in class.
-`blink.s` is an ARM assembly language program that blinks a single LED.
-To implement a scanner, you will need to control at least 4 LEDs.
+`blink.s` is an ARM assembly language program that blinks a single
+LED.  To implement a scanner, you will need to control at least 4
+LEDs. Using arithmetic and loops, your assembly program changes which
+LED is lit to show a scanner pattern.
 
 ### 1. Wire up your breadboard
 The basic scanner should have a row of 4 LEDs. If you feel ambitious and want to make more interesting patterns, wire up 8 LEDs. Validate your breadboard wiring by testing that each LED lights up when powered.
@@ -91,19 +95,21 @@ $ git fetch origin
 $ git checkout assign1-basic
 ```
 
-Once you switch to the `assign1-basic` branch, the new files  `larson.s` and `Makefile` will be added to your directory. The `larson.s` is the file in which you will write your code for the assignment. The starter version of `larson.s` is simply a copy of `blink.s` from lab. 
+Once you switch to the `assign1-basic` branch, a new file `Makefile` and a folder `src` will be added to your directory. The `src` folder will always contain all your source code for each assignment, and the file named `Makefile` will always be at the root of your assignment repo. The file `src/apps/larson.s` is the file in which you will write your code for the assignment. The starter version of `larson.s` is simply a copy of `blink.s` from lab. 
 
-The starter files include a file named `Makefile`. This is a build script
-similar to the `doit` scripts you saw in lecture&mdash;it will use the `as` and `objcopy` utilities
-to compile your `larson.s` into a `larson.bin` file that you can install to the Pi. To use
-the Makefile to build your project, run `make` from the command line in the directory containing the Makefile, e.g.
+{% include callout.html type="info" %}
+You'll notice that `larson.s` lives in the `src/apps` subdirectory. You might think that having a hierarchy of directories for such a simple assigmnent is overkill, and indeed it is. However, as the quarter progresses and you knock down the assignments one by one, you'll build up a lot of `.c` and `.s` files in your assignments repo. Rather than dealing with a whole mess of files at a single level of your repo, we opted to organize the files into logically named subdirectories. Navigating a few extra directories now may be a little frustrating, but we think that it'll make your life much easier in the assignments to come. (The hierarchy of directories also has the advantage of showing you how C projects "in the wild" are structured.)
+</div>
+
+The starter files include a file named `Makefile`. This is a build script similar to the `doit` scripts you saw in lecture&mdash;it will use the `arm-none-eabi-as` and `arm-none-eabi-objcopy` utilities to compile your `larson.s` into a `larson.bin` file that you can install to the Pi. To use the Makefile to build your project, run `make` from the command line in the directory containing the Makefile, e.g.
 
 ```
 $ make
-arm-none-eabi-as larson.s -o larson.o
-arm-none-eabi-objcopy larson.o -O binary larson.bin
+mkdir -p build/bin build/obj
+arm-none-eabi-as src/apps/larson.s -o build/obj/larson.o
+arm-none-eabi-objcopy build/obj/larson.o -O binary build/bin/larson.bin
 $ make install
-rpi-install.py larson.bin
+rpi-install.py build/bin/larson.bin
 ```
 
 For now, don't worry about how `make` works. We'll go through Makefiles in-depth in the next lab.
@@ -111,7 +117,7 @@ For now, don't worry about how `make` works. We'll go through Makefiles in-depth
 If you build the starter program and install it on the Pi, it will blink GPIO 20. This GPIO is wired to the leftmost LED of the scanner on a correctly-wired breadboard.  Confirm this on your setup and you're now ready to write your scanner program!
 
 ### 4. Configure scanner GPIOs
-The starter program is a copy of the `blink.s` you studied in lab1. This program configures the single pin GPIO 20 and enters an infinite loop to set and clear that pin. Carefully review this code and be sure you understand how it accomplishes its tasks. Ask questions if anything is unclear! Your job is to modify this program to instead blink the scanner sequence.  
+The starter program is a copy of the `blink.s` you studied in lab 1. This program configures the single pin GPIO 20 and enters an infinite loop to set and clear that pin. Carefully review this code and be sure you understand how it accomplishes its tasks. Ask questions if anything is unclear! Your job is to modify this program to instead blink the scanner sequence.  
 
 A good first step is to extend the initialization code to configure all of the GPIOs your scanner uses, not just GPIO 20. Refer to section 6 of the [Broadcom ARM Peripheral](/readings/BCM2835-ARM-Peripherals.pdf) for the details on the GPIO registers.
 
@@ -135,7 +141,8 @@ Writing clean, readable assembly code is a challenge. Commenting is essential!  
 Minimize the uses of branches in assembly. Straight-line code is code without branches
 and is almost always easier to understand. However, a downside of straight-line code is that there
 may be a lot of code duplication. Try to factor your code to remove repeated code.
-Here there is a trade-off between less code and clearer code.
+Here there is a trade-off between less code and clearer code. Above all, strive for code that can be
+easily understood, whether it's by you six months from now or by us in a week when we grade your assignment.
 
 If you have time, experiment with different ways to structure the code. (Be sure to use git commits to separately track your explorations!) Of the options you considered, which approach seems most clear to you and why?
 
@@ -187,7 +194,7 @@ Before starting on an extension, be sure you have first committed and pushed a w
 Commit and push your changes for the extension on this new branch. Implement the extension by modifying the `larson.s` file. DO NOT create any new files for the extension.
 
 *Note*
-When you create a new branch locally, you'll need to push that branch to your github repo online. This is a process called setting the "upstream" reference for this branch in git. In order to do this, the first time you push to your new branch, you'll need to use the following special push command after adding and commiting your changes
+When you create a new branch locally, you'll need to push that branch to your GitHub repo online. This is a process called setting the "upstream" reference for this branch in git. In order to do this, the first time you push to your new branch, you'll need to use the following special push command after adding and commiting your changes
 
     $ git push --set-upstream origin assign1-extension
     
@@ -202,21 +209,13 @@ from the `assign1-basic` branch to `master`, following the steps given in the
 extension, create a separate pull request for `assign1-extension`
 into `master`.
 
-To grade your submission, the human grader will invoke `make` to build your `larson.bin` and test it on a Raspberry Pi
-with the LEDs plugged in. For this process to go smoothly, your project must successfully build as submitted. We run an automated checker on your submission to warn about errors that must be resolved before your submission can be accepted.
+*NOTE*
+If you don't create a pull request for your assignment, it won't be graded. Make sure you create a pull request for both your basic and extension branchs on each assignment. If you forget to create a pull request, there will be an automatic __0.5 points deducted from your assignment automatically.__ If you're confused about what a pull request is or why you need to create one, feel free to reach out to us either on Piazza or via the staff mailing list. 
 
-The automated check for this assignment is more likely to fail than in assignment 0,
-since there are more things that can go wrong. In this assignment, the
-automated checker is verifying that:
+To grade your submission, the human grader will invoke `make` to build your larson.bin file and test it on a Raspberry Pi with the LEDs plugged in. For this process to go smoothly, your project must successfully build as submitted, without any errors or warnings. There are no automated tests setup on your repo right now, but make sure that your project:
 
-- you have a Makefile (which we've included in the starter code, so
-you should be fine if you keep that as is)
-- you have NOT checked in `larson.bin` in (you should only be checking in
-  your source code, and we'll build the program from source)
 - `make` runs successfully in the clean testing environment
-- `make` generates a `larson.bin` file
+- You use pins 20 - 27 for your scanner (depending on how many LEDs you use)
+- You have a Makefile (the same one that was included in the starter code)
 
-If your submission does not pass the automatic checker, it is your responsibility to resolve the issue. See our [guide to the automated checker](/guides/ci/) for information on the system. Come by office hours if you need our help sorting it out. If the grader has to fix your unresolved build errors, there will be an __automatic 1 point deduction from your basic grade__.
-
-
-
+If the human grader needs to go into your repo and edit your code manually for `make` to successfully run, there will be an __automatic deduction of 1 point from your assignment grade__. 

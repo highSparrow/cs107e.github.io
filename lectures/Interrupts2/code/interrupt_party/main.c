@@ -6,7 +6,9 @@
 #include "keyboard.h"
 #include "printf.h"
 #include "uart.h"
-void console_cycle_color(void);
+#include "gpio_interrupts.h"
+
+//void console_cycle_color(void);
 #define BUTTON GPIO_PIN21
 
 
@@ -15,7 +17,7 @@ static volatile int elapsed;
 static bool button_pressed(unsigned int pc)
 {
     if (gpio_check_and_clear_event(BUTTON)) {
-        console_cycle_color();
+        uart_putchar('s');
         return true;
     }
     return false;
@@ -48,7 +50,7 @@ void configure_button(void)
     gpio_set_input(BUTTON);
     gpio_set_pullup(BUTTON);
     gpio_enable_event_detection(BUTTON, GPIO_DETECT_FALLING_EDGE);
-    interrupts_attach_handler(button_pressed, INTERRUPTS_GPIO3);
+    gpio_interrupts_register_handler(BUTTON, button_pressed);
 }
 
 void configure_alarm(void)
@@ -57,28 +59,30 @@ void configure_alarm(void)
     armtimer_init(1000000);
     armtimer_enable();             // enable timer itself
     armtimer_enable_interrupts();  // receive timer events as interrupts
-    interrupts_attach_handler(second_elapsed, INTERRUPTS_BASIC_ARM_TIMER_IRQ);
+    interrupts_register_handler(INTERRUPTS_BASIC_ARM_TIMER_IRQ, second_elapsed);
 }
 
 void configure_keyboard(void)
 {
     keyboard_init(KEYBOARD_CLOCK, KEYBOARD_DATA);
     gpio_enable_event_detection(KEYBOARD_CLOCK, GPIO_DETECT_FALLING_EDGE);
-    interrupts_attach_handler(clock_edge, INTERRUPTS_GPIO3);
+    gpio_interrupts_register_handler(KEYBOARD_CLOCK, clock_edge);
 }
 
 
 void main(void) 
 {
+    interrupts_init();
     gpio_init();
+    gpio_interrupts_init();
     uart_init();
     console_init(1, 9);
-    interrupts_init();
 
     configure_button();
     configure_alarm();
     configure_keyboard();
 
+    gpio_interrupts_enable();
     interrupts_global_enable();
 
     int last = 0;

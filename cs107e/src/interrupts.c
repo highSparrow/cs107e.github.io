@@ -1,6 +1,8 @@
 /*
  * Julie Zelenski <zelenski@cs.stanford.edu>
- * Date: Feb 20, 2020
+ * Philip Levis <pal@cs.stanford.edu>
+ *
+ * Last modified: May 8, 2020
  */
 #include "assert.h"
 #include "interrupts.h"
@@ -22,18 +24,31 @@ struct interrupt_t {
 #define INTERRUPT_CONTROLLER_BASE (void *)0x2000B200
 
 static volatile struct interrupt_t * const interrupt = INTERRUPT_CONTROLLER_BASE;
-
+static const unsigned long long irq_safe_mask = (1ULL << INTERRUPTS_AUX)       |
+                                                (1ULL << INTERRUPTS_I2CSPISLV) |
+                                                (1ULL << INTERRUPTS_PWA0)      |
+                                                (1ULL << INTERRUPTS_PWA1)      |
+                                                (1ULL << INTERRUPTS_CPR)       |
+                                                (1ULL << INTERRUPTS_SMI)       |
+                                                (1ULL << INTERRUPTS_GPIO0)     |
+                                                (1ULL << INTERRUPTS_GPIO1)     |
+                                                (1ULL << INTERRUPTS_GPIO2)     |
+                                                (1ULL << INTERRUPTS_GPIO3)     |
+                                                (1ULL << INTERRUPTS_VC_I2C)    |
+                                                (1ULL << INTERRUPTS_VC_SPI)    |
+                                                (1ULL << INTERRUPTS_VC_I2SPCM) |
+                                                (1ULL << INTERRUPTS_VC_UART);
+ 
 extern uint32_t _vectors, _vectors_end;
 extern uint32_t *_RPI_INTERRUPT_VECTOR_BASE;
 
-#define MAX_HANDLERS 32
-
+// This stores the handlers for peripheral interrupts (IRQs) and as well
+// as basic interrupts. The 2835 has 64 IRQs, these are entries 0-63. We
+// place the basic interrupts after them (see the enumeration in
+// interrupts.h).
 static struct {
-    int irq_source;
     handler_fn_t fn;
-} handlers[MAX_HANDLERS];
-
-static int nHandlers;
+} handlers[INTERRUPTS_COUNT];
 
 void interrupts_init(void)
 {
@@ -43,8 +58,6 @@ void interrupts_init(void)
     interrupt->disable_basic = 0xffffffff;
     interrupt->disable[0] = 0xffffffff;
     interrupt->disable[1] = 0xffffffff;
-    // reset handler array to empty
-    nHandlers = 0;
     
     // copy table of vectors to destination RPI_INTERRUPT_VECTOR_BASE
     // _vector and _vector_end are symbols defined in interrupt_asm.s
@@ -74,29 +87,60 @@ static bool is_basic(unsigned int irq_source)
 // these IRQ sources are shared between CPU and GPU
 static bool is_shared(unsigned int irq_source)
 {
-    return irq_source >= INTERRUPTS_SHARED_FIRST && irq_source < INTERRUPTS_SHARED_END;
+    return irq_source >= INTERRUPTS_SHARED_START && irq_source < INTERRUPTS_SHARED_END;
 }
 
-static void enable_source(unsigned int irq_source)
+bool interrupts_enable_source(unsigned int irq_source)
 {
     if (is_basic(irq_source)) {
         unsigned int shift = irq_source - INTERRUPTS_BASIC_BASE;
         interrupt->enable_basic |= 1 << shift;
+        return true;
     } else if (is_shared(irq_source)) {
         unsigned int bank = irq_source / 32;
         unsigned int shift = irq_source % 32;
         interrupt->enable[bank] |= 1 << shift;
+        return true;
+    } else {
+        return false;
     }
 }
 
-// returnes true if there is a pending event for the given source, false otherwise
-// each source assigned a particular bit in one of the pending registers
-static bool is_pending(unsigned int irq_source)
+bool interrupts_disable_source(unsigned int irq_source) {
+    if (is_basic(irq_source)) {
+        unsigned int shift = irq_source - INTERRUPTS_BASIC_BASE;
+        interrupt->disable_basic |= 1 << shift;
+        return true;
+    } else if (is_shared(irq_source)) {
+        unsigned int bank = irq_source / 32;
+        unsigned int shift = irq_source % 32;
+        interrupt->disable[bank] |= 1 << shift;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// Returns whether a given IRQ is safe to be used.
+// From the BCM2835 manual 7.5: the table above has many empty entries. 
+// These should not be enabled as they will interfere with the GPU operation."
+// Returns whether the irq is a not-empty entry.
+static bool is_safe(unsigned int irq) 
+{
+    unsigned long long bit = 1ULL << irq;
+    return ((bit & irq_safe_mask) != 0);
+}
+
+
+// Returns true if there is a pending event for the given source, false 
+// otherwise. Each source assigned a particular bit in one of the pending
+// registers
+bool interrupts_is_pending(unsigned int irq_source)
 {
     if (is_basic(irq_source)) {
         unsigned int shift = irq_source - INTERRUPTS_BASIC_BASE;
         return interrupt->pending_basic & (1 << shift);
-    } else if (is_shared(irq_source)) {
+    } else if (is_shared(irq_source) && is_safe(irq_source)) {
         unsigned int bank = irq_source / 32;
         unsigned int shift = irq_source % 32;
         return interrupt->pending[bank] & (1 << shift);
@@ -104,19 +148,39 @@ static bool is_pending(unsigned int irq_source)
     return false;
 }
 
-void interrupts_attach_handler(handler_fn_t fn, unsigned int source)
+handler_fn_t interrupts_register_handler(unsigned int source, handler_fn_t fn)
 {
-    if (!is_basic(source) && !is_shared(source)) return;
-
+    assert(is_basic(source) || (is_shared(source) && is_safe(source)));
     assert(vector_table_is_installed());
-    assert(nHandlers < MAX_HANDLERS);
-
-    handlers[nHandlers].irq_source = source;
-    handlers[nHandlers].fn = fn;
-    nHandlers++;
-    enable_source(source);
+    
+    handler_fn_t old_handler = handlers[source].fn;
+    handlers[source].fn = fn;
+    return old_handler;
 }
 
+extern unsigned int count_leading_zeroes(unsigned int val); // Defined in assembly
+static int interrupts_get_next(void);
+
+static int interrupts_get_next(void) {
+    unsigned int basic_zeroes = count_leading_zeroes(interrupt->pending_basic);
+    unsigned int pending0_zeroes = count_leading_zeroes(interrupt->pending[0]);
+    unsigned int pending1_zeroes = count_leading_zeroes(interrupt->pending[1]);
+    // We only care about basic bits 0-7:
+    //  - bits 8 and 9 are for the pending registers, which we always check
+    //  - higher bits are GPU which we ignore
+    if (basic_zeroes >= 24) { 
+        // If bit 0 is set there will be 31 leading zeroes, while if bit 31 is set
+        // there are 0 leading zeroes. So the number is 31 - number of zeroes; add
+        // INTERRUPTS_BASIC_BASE for index into table.
+        return (31 - basic_zeroes) + INTERRUPTS_BASIC_BASE;
+    } else if (pending0_zeroes != 32) {
+        return (31 - pending0_zeroes);
+    } else if (pending1_zeroes != 32) {
+        return (63 - pending1_zeroes);
+    } else {
+       return INTERRUPTS_NONE;
+    }
+}
 
 // The dispatch function must be extern as it is called from another module
 // (interrupts_asm.s). However, it not otherwise intended as a public 
@@ -126,33 +190,8 @@ void interrupt_dispatch(unsigned int pc);
 
 void interrupt_dispatch(unsigned int pc)
 {
-    for (int i = 0; i < nHandlers; i++) {
-        // check handler for pending source, give a chance to process
-        // if handler returns true, this indicates interrupt has
-        // been processed; dispatch stops here
-        // otherwise ask other attached handlers to process
-        if (is_pending(handlers[i].irq_source) && handlers[i].fn(pc)) {
-            return;
-        }
+    int next_interrupt = interrupts_get_next();
+    if (next_interrupt < INTERRUPTS_COUNT) {
+        handlers[next_interrupt].fn(pc);
     }
 }
-
-#if 0
-Add gcc interrupt attribute to generate function with
-prolog/epilog suitable for use as IRQ vector.
-How does this differ from our hand-written version?
-
-void sample_vector(void) __attribute__ ((interrupt ("IRQ")));
-
-void sample_vector(void)
-{
-    interrupt_dispatch(0);
-}
-
-<sample_vector>:
-    sub lr, lr, #4
-    push    {r0, r1, r2, r3, ip, lr}
-    mov r0, #0
-    bl  0 <interrupt_dispatch>
-    ldm sp!, {r0, r1, r2, r3, ip, pc}^
-#endif

@@ -27,93 +27,228 @@ __To prep for assign7:__
 ---
 ### Goals
 
-With all your hard work on the previous assignments, you have schooled your Raspberry Pi in how to read input from a keyboard and respond to your commands via a graphical console display. 
-For the _pièce de résistance_ you'll upgrade your keyboard driver so that you can type as fast as the wind without dropping characters. 
+With all your hard work on the previous assignments, your Raspberry Pi
+can now read input from a keyboard and respond to your commands via a
+graphical console display.  For the _pièce de résistance_ you'll upgrade
+your keyboard driver so that you can type as fast as the wind without
+dropping characters.
+
+Conceptually, this is about concurrency, a program
+being able to do more than one thing at once, and preemption, when one
+task in a program can interrupt another to take control of the processor.
+Both concurrency and preemption are fundamental ideas to computer systems:
+they're what let web servers handle tens of thousands of clients and
+your GPU to draw beautiful graphics. In this assignment, you'll start
+from the ground up, handling the root of preemption in every computer
+system: interrupts.
 
 In completing this assignment you will have:
 
-- built a responsive system to process events as interrupts
-- used an interrupt-safe data structure to correctly share data across regular and interrupt code
+- written a GPIO extension module to provide a nice API for interrupts,
+- redesigned your PS/2 driver to use GPIO interrupts so it doesn't drop scan codes, and
+- used an interrupt-safe data structure to correctly share data across regular and interrupt code.
 
 Those of you reaching the stretch goal for the complete system bonus will also:
 
 + bundle the collection of modules you've written into a comprehensive library for implementing a bare-metal system on the Pi
 + have constructed a complete system of your own top to bottom: your console running on your library
 
-_The amount of new code needed for this assignment is much less than in previous weeks to give you a bit of breathing room to revisit any previous modules that need attention and claim that complete system bonus. You can do it!_
-
-This work completes the transformation of your Raspberry Pi into a standalone computer, ready to be extended and improved in your final project. Right on!
-
-## Looking ahead: final project
-
-It's also time to start planning for your final project. The [project writeup](/assignments/project/) has the full schedule of dates to get on your calendar. The first step is forming teams. Let us know you're going to partner with using this [Google form](https://docs.google.com/forms/d/e/1FAIpQLSdJ9iKbXPDn7J8q0O-EVg3ihsTR9pB9C5L52gx_PXp-ER2nUw/viewform?usp=sf_link). Please submit the form by __Monday March 2nd__.
+This work completes the transformation of your Raspberry Pi into a
+standalone computer, ready to be extended and improved in your final
+project. Right on!
 
 ## Get starter files
-Change to the `cs107e.github.io` repository in your `cs107e_home` and do a `git pull` to ensure your courseware files are up to date.
 
-To get the assignment starter code, change to your local repository, fetch any changes from the remote and switch to the assignment basic branch:
+Change to the `cs107e.github.io` repository in your `cs107e_home` and
+do a `git pull` to ensure your courseware files are up to date.
+
+To get the assignment starter code, change to your local repository,
+fetch any changes from the remote and switch to the assignment basic
+branch:
 ```
 $ cd ~/cs107e_home/assignments
 $ git fetch origin
 $ git checkout assign7-basic
 ```
 
-You should also verify you have the up-to-date contents for all of your modules: `timer.c`, `gpio.c`,`strings.c`, `printf.c`, `malloc.c`, `backtrace.c`, `keyboard.c`, `shell.c`, `fb.c`, `gl.c`, and `console.c`.  If you are missing changes from a previous assignment branch (e.g. commits from a regrade submission), have your `assign7-basic` checked out and use merge to incorporate changes from the desired branch (e.g. `git merge assign6-basic`).
+You should also verify you have the up-to-date contents for all of
+your modules: `timer.c`, `gpio.c`,`strings.c`, `printf.c`, `malloc.c`,
+`backtrace.c`, `keyboard.c`, `shell.c`, `fb.c`, `gl.c`, and
+`console.c`.  If you are missing changes from a previous assignment
+branch (e.g. commits from a regrade submission), have your
+`assign7-basic` checked out and use checkout to incorporate changes from
+the desired branch (e.g. `git checkout assign6-basic -- src/lib/console.c`).
 
-__Pay careful attention to the assignment 7 Makefile__: The starter Makefile assumes that you are going for the complete system bonus and `MY_MODULES` is set to use all of your own modules. If you need to use the reference implementation for some modules, you must edit the Makefile to remove them.  If you fix those issues and are ready to add the modules back in, you must edit the Makefile to re-list them.
+This assignment adds three more modules: `interrupts_asm.s` and
+`bits_asm.s` from Lab 7, and `gpio_interrupts.c`. Make sure you copy
+these into into your `src/lib` directory. You can now add these modules to
+your code, or, as usual, use the reference ones if you prefer.
 
-When submitting assign 7, be sure the Makefile is set for the configuration you intend to be graded. We will test your submission using the modules you have listed in the Makefile.  If `MY_MODULES` lists all 11 modules, your work will be evaluated as complete and will be considered for the system bonus. If you do not have confidence in one or more of your modules, remove them from `MY_MODULES` and the reference module(s) will be used when testing and grading your work. Your submission will not be eligible for the bonus.
+__Pay careful attention to the assignment 7 Makefile__: The starter
+Makefile assumes that you are going for the complete system bonus and
+`MY_MODULES` is set to use all of your own modules. If you need to use
+the reference implementation for some modules, you must edit the
+Makefile to remove them.  If you fix those issues and are ready to add
+the modules back in, you must edit the Makefile to re-list them.
 
-## Basic part
+When submitting assign 7, be sure the Makefile is set for the
+configuration you intend to be graded. We will test your submission
+using the modules you have listed in the Makefile.  If `MY_MODULES`
+lists all 14 modules, your work will be evaluated as complete and will
+be considered for the system bonus. If you do not have confidence in
+one or more of your modules, remove them from `MY_MODULES` and the
+reference module(s) will be used when testing and grading your
+work. Your submission will not be eligible for the bonus.
 
-The basic part of the assignment is to rework your PS/2 keyboard driver to be interrupt-driven. The keyboard interface is unchanged, but its internal implementation changes from a polling strategy to one using interrupts.
+## Overview
 
-The version of `keyboard_read_scancode` you wrote for assignment 5 loops calling `gpio_read` on the clock GPIO until it sees the level transition from high to low. If your code doesn't happen to be reading the GPIO at the essential moment, the event is lost. If you instead arrange for an interrupt to be generated by each falling edge, the interrupt handler can jump in and grabs the data bit before it passes by and store it for later processing by  `keyboard_read_scancode`.
+The basic part of the assignment is to rework your PS/2 keyboard
+driver to be interrupt-driven. The keyboard interface is unchanged,
+but its internal implementation changes from a polling strategy to one
+using interrupts. You will also add support for GPIO interrupts and
+write a little bit of assembly code.
 
-First, read over the code in the starter `tests/test_keyboard_interrupts.c` and try it out with your existing keyboard driver. You should see that any keys typed while the test program is paused inside `timer_delay` will be missed. Employing interrupts will fix this.
+The version of `keyboard_read_scancode` you wrote for assignment 5
+loops calling `gpio_read` on the clock GPIO until it sees the level
+transition from high to low. If your code doesn't happen to be reading
+the GPIO at the moment the edge falls, it loses the event. Furthermore,
+the CPU spins just waiting for this edge and can't do anything else while
+it does. So it both loses events and is extremely inefficient.
 
-### 1) Set up keyboard interrupts
-First, configure interrupts to be triggered on every falling edge on the clock line. The additions to do this are relatively small, but the code needs to be just right. Go slow and pay close attention to the details. Bring your most methodical approach to debugging any issues.
+Interrupts solve this problem. Instead of running a spin loop for a falling
+edge, your code can configure the hardware to issue an interrupt when it
+sees a falling edge. The interrupt handler can run immediately when this happens
+and read the data bit from the data pin.
 
-- Review the lab 7 exercises on handling button presses via an interrupt. The code that you wrote in lab serves as a model for what to do now.
-- In `keyboard.c`, add a `clock_edge` interrupt handler function for an event on the keyboard clock gpio.  Be sure that that the handler clears the event so that it will not repeatedly re-trigger. Have this first version of `clock_edge` simply output a single char `uart_putchar('#')` and increment a global counter. Whenever the count hits a multiple of 11 (the numbers of bits in a PS/2 packet), output a space char.
-- In your `keyboard_init` function, enable event detection on the falling edge of the clock line and attach `clock_edge` as a handler. 
-- Edit the `main` function of the test program `tests/test_keyboard_interrupts.c` to make the appropriate calls to initialize interrupts at start and globally enables interrupts once all is ready.
-- Run the test program to confirm your handler function receives interrupts. Typing a regular key sends 3 packets (1 for key press and 2 for key release) so should generate 33 interrupts in total. Your handler function should output 3 groups of 11 hash characters per typed key.
+To add this functionality to your libpi, you'll need to do three things:
 
-Remember, the code in an interrupt handler should be simple and streamlined. This is both because you don't want to delay/miss the processing of the next interrupt and because debugging interrupts
-can be so hard. A complex `printf` in your handler would likely cause you to miss a closely-following event and could lead you on a wild goose chase to find the "bug" that caused it.
+  - Use the assembly you wrote in lab for the core interrupt handling routine.
+  - Write a GPIO interrupt library. Because all of the GPIO pins share a
+  single interrupt, you need to add another layer of dispatch to allow
+  software to register handlers on a per-pin level. The library, when it
+  handles the GPIO interrupt, checks to see which pins have have pending
+  events and calls the corresponding pin interrupt handlers. One tricky
+  part you'll handle is quickly figuring out which pins have pending events:
+  you'll leverage your assembly proficiency to write a function with the ARM `clz`
+  instruction, which computes how many leading zeroes there are (the first
+  1 bit set).
+  - Update your keyboard driver to use interrupts instead of spin loops.
+  This involves using a ring buffer to store scan codes, so you can safely
+  share state between interrupt mode and supervisor mode code. 
 
-### 2) Gather a PS/2 scancode
+To get started, read over the code in the starter
+`tests/test_keyboard_interrupts.c` and try it out with your existing
+keyboard driver. You should see that your code drops any keys typed while
+the test program is paused inside `timer_delay`. Using interrupts in
+your keyboard driver will fix this.
+
+### 1) Write a GPIO interrupt handling library
+
+In lab, your button press code directly handled GPIO interrupts. This is
+OK for a simple test program, but more complex programs will want to be
+able to handle interrupts pins. Furthermore, different modules may want
+to handle interrupts. We want modules to be independent. If there's only
+a single GPIO interrupt handler, then there needs to be a piece of code
+that somehow dispatches interrupts to the right modules based on which
+pins events are on. Requiring an application to do this, like you did
+in your button example, requires an application to be aware of the
+internals of modules. So what we need is a general library that lets
+different modules register different handlers for different pins.
+
+Take a look at the interface in `gpio_interrupts.h`. This file has
+four functions you need to implement. The basic logic is that this
+module handles the INTERRUPTS_GPIO3 interrupt by registering a handler
+with the interface `interrupts.h`. When it handles an interrupt, it
+then scans the two event pending banks `eds[0]` and `eds[1]` in the
+peripheral registers for pending events, and dispatches to per-pin
+handlers based on which pins have events. The basic logic is very
+similar to what `interrupts.c` does, but a bit simpler, because there
+aren't basic interrupts. We encourage you to study that code as a
+model for what you should do. 
+
+At this point, you definitely want to write a few tests! If there
+are bugs in your interrupt handling library, then debugging your
+keyboard will be very difficult. Test enabling and disabling GPIO
+interrupts, registering handlers on pins in both banks, and that
+you can handle two interrupts that arrive at the same time (hook
+a button up to two pins in parallel). Spending an hour now to
+write 3-4 good test may save you hours of debugging later.
+
+### 2) Set up keyboard interrupts
+
+Recall that we sample the PS/2 data line on a falling edge on the
+clock line. In `ps2_init`, configure the PS/2 clock pin to trigger an interrupt
+on a falling edge (using the API in `gpio_extra.h`) and register a 
+handler for it. You should enable GPIO
+interrupts in the PS/2 module and enable global interrupts in main: this
+structure of where enables what reflects the structure of the level at which
+they're interacting with the interrupts system.  Don't forget
+you want your handler to clear the event or it will run forever!
+
+Now is a good point to test! Run the test program to confirm that you are
+receiving interrupts from the PS/2 clock line. If you type a key, how
+many scan codes do you expect? How many clock edges per scan code? Is
+this what you see?
+
+Remember, interrupt code needs to the simple and fast. 
+You want it to be fast because you don't want to delay/miss the
+processing of the next interrupt. You want to tbe simple because debugging
+interrupts is so hard. Putting `printf` in your handler, for exmaple, will
+cause you to miss clock edges: a single character takes almost 100 microseconds,
+which is the same length as clock pulse in PS/2.
+
+
+### 3) Gather a PS/2 scancode
 The falling edge of PS/2 clock edge indicates that now is the time to grab a bit from the PS/2 data line.  
 
 ![ps2 clock](images/ps2.png)
 
-Change `clock_edge` to read from the PS/2 data line and based on the value read, output `uart_putchar('0')` or `uart_putchar('1')` instead of a hash char. Build and run the test program . The output should show the 11 bits in the packet sent by the keyboard.
+Change your handler to gather the 11 bits of a scancode as they arrive. Your handler
+should execute 11 times: don't enter spin loops to block to read in the scancode! Be sure to
+re-purpose your earlier code that implements the logic to synchronize on the start bit and 
+verify the parity and stop bits. Note that because you return from the interrupt handler,
+you can't keep variables on the stack: you'll need to use global variables to keep track
+of execution state.
 
-Now edit `clock_edge` to gather those 11 bits as they arrive to form a scancode. Be sure to re-purpose your earlier code that implements the logic to synchronize on the start bit and 
-verify the parity and stop bits.
-
-Upon receiving the last bit of a well-formed packet, the completed scancode is ready to be enqueued in step 3 below.
+Once you're receiving scan codes, you're ready to enqueue them for mainline code to fetch!
 
 (As a side note, our reference version of the keyboard module supports reading in either polling mode or by interrupts. It defaults to polling and can be switched into interrupt mode by calling the function `keyboard_use_interrupts()`. Your keyboard does not need to support this. You can directly re-purpose your previous code to read scancodes to instead read via interrupts without trying to preserve the old way of doing things.)
 
-### 3) Use ring buffer
+### 4) Use ring buffer
 
-Almost there! The last task is to use a shared queue to communicate the received scancodes from `clock_edge` to the `keybaord_read_scancode` function.  The queue we use is the interrupt-safe ring buffer design as described in lecture. Review the header and source files (`cs107e/include/ringbuffer.h` , `cs107e/src/ringbuffer.c`) to learn more about this data structure. 
+You can now receive and store scan codes. But you still need to safely
+get them to code running in supervisor mode (from main). You'll do
+this with the ring buffer described in lecture. When your handler
+successfully receive a scan code, it puts it into the ring
+buffer. When mainline code calls `keyboard_read_scancode`, this
+function blocks (spins) until there is a scancode in the buffer, then
+returns it. `keyboard_read_scancode` always returns a scancode, either a
+saved scancode that was received previously or waits for the next
+scancode to arrive.
 
--  `keyboard_init` should initialize the new ring buffer queue.
-- When `clock_edge` receives the final bit of a packet, it should enqueue the scancode to the queue.
-- `keyboard_read_scancode` should take scancodes from the queue.   If the queue is non-empty, it immediately dequeues the first scancode and returns it. If the queue is empty, it will spin waiting for the queue to become non-empty, i.e. waiting for `clock_edge` to enqueue a scancode. It then dequeues the scancode and returns it. Note that `keyboard_read_scancode` always returns a scancode— either a saved scancode that was received previously or waits for the next scancode to arrive.
-
-You should now be able to run your same console shell application as in
-assignment 6, and all should work as before, except this time you never miss a key. Each typed key is immediately enqueued by the interrupt handler for later processing by the console when ready.
+You should now be able to run your same console shell application as
+in assignment 6, and all should work as before, except this time you
+never miss a key. Each typed key is immediately enqueued by the
+interrupt handler for later processing by the console when ready.
 
 You now have a fully operational console that uses the full power of your
 hardware! What you have running is not too far from an Apple II computer.
 
-### 4) Need for speed?
-Your new interrupt-driven keyboard driver is guaranteed to never drop a key, but even a moderately fast typist can still enqueue a decent number of keys during a slow console redraw that makes for a longish wait as the console works through the backlog. __This is perfectly fine as our requirement is that the console receive all typed characters and correctly draw and respond to input__. But, ... if the performance exercise from lab 7 has roused your interest in optimization, we'd love to see what you can do to improve the responsiveness. A few ideas to consider:
+### 5) Need for speed?
+
+Your new interrupt-driven keyboard driver won't drop a key unless someone can
+type 86+ characters in between calls to `keyboard_read_scancode`: the ringbuffer
+is 256 elements and most keys are 3 scan codes. Unless you're doing something really
+CPU intensive, this is unlikely
+
+But even a moderately fast typist can still enqueue a decent
+number of keys during a slow console redraw that makes for a longish
+wait as the console works through the backlog. __This is correct, in that
+our requirement is that the console receive all typed
+characters and correctly draw and respond to input__. But, ... if the
+performance exercise from lab 7 has roused your interest in
+optimization, we'd love to see what you can do to improve the
+responsiveness. A few ideas to consider:
 
 - Inner loops are the first place to look for speed-up opportunities (e.g. hoisting out redundant work, streamlining operations, loop unrolling). With a million pixels on the line, cutting 10 instructions per pixel totals to a full second of time saved.
 - Every call to `gl_draw_char` calls `font_get_char` to re-extract the character from the font bitmap. Try doing the extract just once per unique char and cache to re-use later?

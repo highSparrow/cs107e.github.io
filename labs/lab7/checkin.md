@@ -7,9 +7,9 @@ During lab, we encourage you to check your understanding with a TA after complet
 
 Each question below is a diagnostic question for each section of the lab. Try answering one after finishing each section to test your understanding.
 
-1. How is a function "attached" as an interrupt handler? If there are multiple attached handlers, how is decided which one processes a given interrupt?
+1. How is a function "registered" as a handler for an interrupt source? Can there be multiple handlers registered to the same source? What happens if no handler has been registered to process a handled interrupt?
 
-2. Why is it necessary for the `gCount` variable to be declared `volatile`? What happens if it is not?
+2. What changes if your counter variable is not declared volatile?
 
 3. How does the program behave if the handler does not clear the event before returning?
 

@@ -46,7 +46,91 @@ To prepare for lab, do the following:
 
 Pull up the [check in questions](checkin) so you have it open as you go.
 
-### 1. Linking
+
+### 1. Stack
+
+Change to the directory `lab4/code/simple`. The `simple.c` program reprises a program that was used in lab3 to experiment with gdb. We will use this same program to study the use of stack memory and organization of stack frames.
+
+Run `simple.elf` under the gdb simulator. Disassemble the `abs` function and read through its assembly instructions.
+
+```
+(gdb) disass abs
+Dump of assembler code for function abs:
+=> 0x00008010 <+0>:     mov r12, sp
+   0x00008014 <+4>:     push {r11, r12, lr, pc}
+   0x00008018 <+8>:     sub r11, r12, #4
+   0x0000801c <+12>:    cmp r0, #0
+   0x00008020 <+16>:    rsblt   r0, r0, #0
+   0x00008024 <+20>:    sub sp, r11, #12
+   0x00008028 <+24>:    ldm sp, {r11, sp, lr}
+   0x0000802c <+28>:    bx  lr
+End of assembler dump.
+```
+
+The first three instructions comprise the function _prolog_ which sets up the
+stack frame. The last three instructions are the function _epilog_ which tears down the stack frame and restores caller-owned registers. The basic structure of the prolog and epilog is common to all functions, with some variation due to differences in local variables or use of caller-owner registers. 
+
+Get together with your partner and carefully trace through instructions in the prolog and epilog of `abs`. Sketch a diagram of the stack frame that it creates.  Below are some issues to note and questions to discuss as you work through it.
+
+__Function prolog__:
+- Register `r11` is used as the frame pointer `fp`. The disassembly from gdb refers to `r11`, while an objdump listing calls it `fp`. The two are completely synonymous, so don't let that trip you up.
+- Which four registers are pushed to the stack to set up the
+APCS frame?  
+- Three of the four registers in the APCS frame are caller-owned registers whose values are preserved in the prolog and later restored in the epilog. Which three are they? Which register is the fourth? Why is that register handled differently?  What is even the purpose of pushing that register as part of the APCS frame?
+- What instruction in the prolog anchors `fp` to point to the current frame?
+- To what location in the stack does the `fp` point?
+- The first instruction of the prolog copies `sp` to `r12` and then uses `r12` in the push that follows. This dance may seems roundabout, but is unavoidable. Do you have an idea why? (Hint: a direct reference to `sp` in a push/pop instruction that itself is changing `sp` sounds like trouble...)
+
+__Function epilog__:
+- To what location in the stack does the `sp` point during the body of the function?  
+- The first instruction of the epilog changes the `sp`. To what location does it pointer after executing that instruction?
+- The `ldm` instruction ("load multiple") reads a sequence of words starting at a base address in memory and stores the words into the named registers. `pop` is a specific variant of `ldm` that additionally adjusts the base address as a side effect (i.e. changes stack pointer to "remove" those words) . The `ldm` instruction used in the epilog of `abs` copies three words in memory starting at the stack pointer into the registers `r11`, `sp`, and `lr`.  This effectively restores the registers to the value they had at time of function entry. The instruction does not similarly restore the value of the `pc` register. Why not?
+- Which registers/memory values are updated by the `bx` instruction? 
+
+
+Here is [a memory diagram when stopped at line 5 in simple.c](images/stack_abs.html). This is in the body of the `abs` function, after the prolog and before the epilog.
+Our diagram shows the entire address space of the `simple`
+program, including the text, data, and stack segments.  Studying this diagram will be helpful to confirm your understanding of how the stack operates and what is stored where in the address
+space. 
+
+The diagram contains a lot of details and can be overwhelming, but if you take the time to closely inspect it, you will gain a more complete understanding of the relationship between the contents of memory, registers, and the executing program.   Go over it with your partner and labmates and ask questions of each other until everyone has a clear picture of how memory is laid out.
+
+Once you understand the prolog/epilog of `abs`, use gdb to
+examine the disassembly for `diff` and `main`. 
+Identify what part of the prolog and
+epilog are common to all three functions and where they differ. What is the reason for those differences?
+
+Lastly, disassemble `make_array` to see how the stack is used
+to store local variables.  Sketch a picture of its stack frame as you follow along with the function instructions.
+
+- After the instructions for the standard prolog, what additional instruction makes space for the array local variable?
+- How are the contents for the array initialized (or not)? 
+- In the body of the function, the array elements stored on the stack are accessed `fp`-relative.  What is the relative offset from the `fp` to the base of the array? How can you determine that from reading the assembly instructions?
+- The prolog has an additional instruction to allocate space for the array, but the epilog does not seem to have a corresponding instruction to  deallocate the space. How then is the stack pointer adjusted to remove any local variables on function exit?
+
+Compare your sketch to this [stack diagram for make_array](images/stack_makearray.html). Does your understanding line up?
+
+### 2. Heap
+
+Change to the directory `lab4/code/heapclient` to begin your foray in heap allocation.
+So far we have stored our data either as local variables on the stack or global variables in the data segment. The functions `malloc` and `free`  offer another option, this one with more precise control of the size and lifetime and greater versatility at runtime.
+
+Study the program `heapclient.c`. The `tokenize` function is used to 
+dissect a string into a sequence of space-separated tokens. The function calls on the not-yet-implemented function `char *strndup(const char *src, size_t n)` to make a copy of each token. The intended behavior of `strndup` is to return a new string containing the first `n` characters of the `src` string.
+
+Talk over with your partner why it would not be correct for `strndup` to declare a local array variable in its stack frame to store the new string.  When a function exits, its stack frame is deallocated and the memory is recycled for use by the next function call.  What would be the consequence if `strndup` mistakenly returns a pointer to memory contained within its to-be-deallocated stack frame?
+
+Instead `strndup` must allocate space from the heap, so that the data can persist after the function exits. Edit `strndup` to use a call to `malloc` to request the necessary number of bytes. How many total bytes of space are needed to store a string with `n` characters?  
+
+Now that you have the necessary memory set aside, what function from the `strings` module can you call to copy the first `n` characters from the `src` string to the new memory?
+
+What is the final step you must take to complete the new string? (Hint: how is the end of a string marked?)
+
+Once you have completed your implementation of `strndup` to make a proper heap copy of the string, build and run the program to verify your code is correct.
+
+Unlike stack and global memory, which is automatically deallocated on your behalf, you must explicitly free dynamic memory when you are done with it. For the finishing touch, edit `main` to add the necessary calls to `free` to properly deallocate all of the heap memory it used.
+
+### 3. Linking
 
 In the first exercise, you will repeat some of the live coding demonstrations shown in the lecture on linking and loading.
 
@@ -171,7 +255,7 @@ undefined symbols are added to the executable.
 This makes it possible to make libraries with lots of useful modules,
 and only link the ones that you actually use in the final executable.
 
-### 2. Memory Map
+### 4. Memory Map
 
 As part of the relocation process, the linker places all of the symbols into their final location. You supply a _memory map_ to the linker to indicate the layout of the sections. Let's look into this file to better understand its purpose and function.
 
@@ -200,7 +284,7 @@ Now open the file `memmap` in your text editor. `memmap` is a _linker script_, w
 Our projects all use this same `memmap`, which defines a correct layout for a standard bare-metal C program for the Pi. You are unlikely to need to edit or customize it.  However, if you are curious to know more,
 here is [documentation on linker scripts](https://sourceware.org/binutils/docs-2.21/ld/Scripts.html).
 
-### 3. Bootloader
+### 5. Bootloader
 The _bootloader_ is the program that runs on the Raspberry Pi that waits to receive a program from your laptop and then executes it. Back in lab 1, you downloaded `bootloader.bin` from the firmware folder and copied it to your SD card under the name `kernel.img` so it is the program that runs when the Raspberry Pi resets.
 
 So far, we have used the bootloader as a "black box". Now you are ready to open it up and learn how programs are sent from your laptop and execute on the Pi.
@@ -276,96 +360,13 @@ Here are some questions to frame your discussion:
 - How/why does the bootloader use the timer peripheral?
 - How will the bootloader respond if you unplug the USB-serial in the middle of transmission?
 
-With your table group, mark up the paper copy of the bootloader source to add comments documenting its operation. Divide it up, something like:
+With your group, mark up the copy of the bootloader source to add comments documenting its operation. Divide it up, something like:
 - One person documents normal operation and explains how to "read" what bootloader is doing by watching the green LED.
 - Another studies checksum calculation, how errors are detected and how retry/retransmit is accomplished.
 - Another reviews handling for timeout, dropped connection, and when the user cancels the operation using Control-C.
 - Someone brave can read David Welch's [bootloader03.c](https://github.com/dwelch67/raspberrypi/blob/master/bootloader03/bootloader03.c) and try to confirm our version is a faithful rewrite.
 
-Have each person jot down notes and then explain their part to the group. **Collate your group's notes and marked up source and hand to the CA.**
-
-### 4. Stack
-
-Change to the directory `lab4/code/simple`. The `simple.c` program reprises a program that was used in lab3 to experiment with gdb. We will use this same program to study the use of stack memory and organization of stack frames.
-
-Run `simple.elf` under the gdb simulator. Disassemble the `abs` function and read through its assembly instructions.
-
-```
-(gdb) disass abs
-Dump of assembler code for function abs:
-=> 0x00008010 <+0>:     mov r12, sp
-   0x00008014 <+4>:     push {r11, r12, lr, pc}
-   0x00008018 <+8>:     sub r11, r12, #4
-   0x0000801c <+12>:    cmp r0, #0
-   0x00008020 <+16>:    rsblt   r0, r0, #0
-   0x00008024 <+20>:    sub sp, r11, #12
-   0x00008028 <+24>:    ldm sp, {r11, sp, lr}
-   0x0000802c <+28>:    bx  lr
-End of assembler dump.
-```
-
-The first three instructions comprise the function _prolog_ which sets up the
-stack frame. The last three instructions are the function _epilog_ which tears down the stack frame and restores caller-owned registers. The basic structure of the prolog and epilog is common to all functions, with some variation due to differences in local variables or use of caller-owner registers. 
-
-Get together with your partner and carefully trace through instructions in the prolog and epilog of `abs`. Sketch a diagram of the stack frame that it creates.  Below are some issues to note and questions to discuss as you work through it.
-
-__Function prolog__:
-- Register `r11` is used as the frame pointer `fp`. The disassembly from gdb refers to `r11`, while an objdump listing calls it `fp`. The two are completely synonymous, so don't let that trip you up.
-- Which four registers are pushed to the stack to set up the
-APCS frame?  
-- Three of the four registers in the APCS frame are caller-owned registers whose values are preserved in the prolog and later restored in the epilog. Which three are they? Which register is the fourth? Why is that register handled differently?  What is even the purpose of pushing that register as part of the APCS frame?
-- What instruction in the prolog anchors `fp` to point to the current frame?
-- To what location in the stack does the `fp` point?
-- The first instruction of the prolog copies `sp` to `r12` and then uses `r12` in the push that follows. This dance may seems roundabout, but is unavoidable. Do you have an idea why? (Hint: a direct reference to `sp` in a push/pop instruction that itself is changing `sp` sounds like trouble...)
-
-__Function epilog__:
-- To what location in the stack does the `sp` point during the body of the function?  
-- The first instruction of the epilog changes the `sp`. To what location does it pointer after executing that instruction?
-- The `ldm` instruction ("load multiple") reads a sequence of words starting at a base address in memory and stores the words into the named registers. `pop` is a specific variant of `ldm` that additionally adjusts the base address as a side effect (i.e. changes stack pointer to "remove" those words) . The `ldm` instruction used in the epilog of `abs` copies three words in memory starting at the stack pointer into the registers `r11`, `sp`, and `lr`.  This effectively restores the registers to the value they had at time of function entry. The instruction does not similarly restore the value of the `pc` register. Why not?
-- Which registers/memory values are updated by the `bx` instruction? 
-
-
-Here is [a memory diagram when stopped at line 5 in simple.c](images/stack_abs.html). This is in the body of the `abs` function, after the prolog and before the epilog.
-Our diagram shows the entire address space of the `simple`
-program, including the text, data, and stack segments.  Studying this diagram will be helpful to confirm your understanding of how the stack operates and what is stored where in the address
-space. 
-
-The diagram contains a lot of details and can be overwhelming, but if you take the time to closely inspect it, you will gain a more complete understanding of the relationship between the contents of memory, registers, and the executing program.   Go over it with your partner and labmates and ask questions of each other until everyone has a clear picture of how memory is laid out.
-
-Once you understand the prolog/epilog of `abs`, use gdb to
-examine the disassembly for `diff` and `main`. 
-Identify what part of the prolog and
-epilog are common to all three functions and where they differ. What is the reason for those differences?
-
-Lastly, disassemble `make_array` to see how the stack is used
-to store local variables.  Sketch a picture of its stack frame as you follow along with the function instructions.
-
-- After the instructions for the standard prolog, what additional instruction makes space for the array local variable?
-- How are the contents for the array initialized (or not)? 
-- In the body of the function, the array elements stored on the stack are accessed `fp`-relative.  What is the relative offset from the `fp` to the base of the array? How can you determine that from reading the assembly instructions?
-- The prolog has an additional instruction to allocate space for the array, but the epilog does not seem to have a corresponding instruction to  deallocate the space. How then is the stack pointer adjusted to remove any local variables on function exit?
-
-Compare your sketch to this [stack diagram for make_array](images/stack_makearray.html). Does your understanding line up?
-
-### 5. Heap
-
-Change to the directory `lab4/code/heapclient` to begin your foray in heap allocation.
-So far we have stored our data either as local variables on the stack or global variables in the data segment. The functions `malloc` and `free`  offer another option, this one with more precise control of the size and lifetime and greater versatility at runtime.
-
-Study the program `heapclient.c`. The `tokenize` function is used to 
-dissect a string into a sequence of space-separated tokens. The function calls on the not-yet-implemented function `char *strndup(const char *src, size_t n)` to make a copy of each token. The intended behavior of `strndup` is to return a new string containing the first `n` characters of the `src` string.
-
-Talk over with your partner why it would not be correct for `strndup` to declare a local array variable in its stack frame to store the new string.  When a function exits, its stack frame is deallocated and the memory is recycled for use by the next function call.  What would be the consequence if `strndup` mistakenly returns a pointer to memory contained within its to-be-deallocated stack frame?
-
-Instead `strndup` must allocate space from the heap, so that the data can persist after the function exits. Edit `strndup` to use a call to `malloc` to request the necessary number of bytes. How many total bytes of space are needed to store a string with `n` characters?  
-
-Now that you have the necessary memory set aside, what function from the `strings` module can you call to copy the first `n` characters from the `src` string to the new memory?
-
-What is the final step you must take to complete the new string? (Hint: how is the end of a string marked?)
-
-Once you have completed your implementation of `strndup` to make a proper heap copy of the string, build and run the program to verify your code is correct.
-
-Unlike stack and global memory, which is automatically deallocated on your behalf, you must explicitly free dynamic memory when you are done with it. For the finishing touch, edit `main` to add the necessary calls to `free` to properly deallocate all of the heap memory it used.
+Have each person jot down notes and then explain their part to the group. **Collate your group's notes and marked up source and show the CA.**
 
 ## Check in with TA
 

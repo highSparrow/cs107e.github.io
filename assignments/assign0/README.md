@@ -3,7 +3,7 @@ released: true
 permalink: /assignments/assign0/
 title: 'Assignment 0: Choose Lab Section, Learn Git'
 toc: true
-duedate: 2020-01-12 9:00 PM
+duedate: 2020-04-14 8:00 PM
 ---
 
 {% comment %}
@@ -28,24 +28,39 @@ __To prep for assign0:__
 
 We have two goals for this assignment:
 
-1. You'll tell us which lab section you prefer.
-   (This'll be your 'solution' to the assignment.)
+1. You'll tell us which lab section you prefer: please do this with the web form we sent out
+   (This'll be your 'solution' to the assignment).
 
-1. Have you go through the assignment workflow (download starter, check
+2. Have you go through the assignment workflow (download starter, check
    in your solution, and submit for grading) and ensure you can successfully complete these tasks.
 
 This assignment will introduce you to the basics of the
 [git](https://en.wikipedia.org/wiki/Git_(software)) version control
 system and the [GitHub](https://github.com) repository hosting service that we will be using in this course.
 
-Version control systems are widely used for software development in industry as
-well as in the open source and academic communities.  These tools enable teams
-of developers to write code in a distributed setting and send it to a central
-repository for review and use.  Alongside keeping a log of changes to the code,
-version control systems support the resolution of conflicts introduced by
-multiple changesets (e.g. two people trying to edit the same lines of the same
-file).  Web interfaces like GitHub promote the practices of code reviews, where
-other team members will review proposed changes to check for bugs and provide
+Version control systems are used everywhere for developing software.
+They let you, either by yourself or as a member of a team of developers,
+keep a complete history of every code change made by any developer. This is
+tremendously useful! If code was working yesterday and isn't today, you can
+go back in time to yesterday. You can then see exactly what changed between
+yesterday and today and who made those changes. 
+
+A key idea in these systems is that there's a central repository that everyone
+links to. This holds the "master" copy of code that everyone should be working
+from. You have a local copy of this repository. You can edit the code as much
+as you want in your local copy without affecting anyone else. After you've made
+your changes, polished them, tested them, and think they're ready for everyone
+else to use, you can "push" them to the central repository.
+In addition to logging all changes to the code, version control systems manage
+all of the tricky cases, like what happens if you want to push some changes
+but someone else has changed that code too (what's called a "merge conflict"). 
+The version control system makes sure that nobody's work is lost or destroyed
+and you can always return to a known working state.
+
+Web interfaces like GitHub work on top of version control systems to provide
+powerful and useful UIs to managing your code. They promote good software 
+practices such as code reviews, where other team members read over and review
+review proposed changes to the code. Your collaborators can check for bugs and provide
 feedback on the design and implementation.  The version control skills that you
 will learn in this course will be invaluable for any future software projects
 that you decide to work on.
@@ -82,7 +97,7 @@ Confirm that your personal assignments repository is available on GitHub by visi
 On your laptop, change to your `cs107e_home` directory and use git to clone your assignments repository:
 
 ```
-$ cs ~/cs107e_home
+$ cd ~/cs107e_home
 $ git clone https://github.com/cs107e/[YOUR-GITHUB-USERNAME]-assignments assignments
 remote: Counting objects: 3, done.
 remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 3
@@ -123,23 +138,23 @@ lab.txt
 
 ### 3. Indicate your lab preference
 
-There are two lab sections that meet every week of the quarter: {{ site.data.quarter.labs }}. You will be assigned to attend one of the two labs, based on your preference/constraint. We must split the cohort fairly evenly to fit each half in our lab room, so we appreciate flexibility if you are able to provide it.  
+If you have not already, submit the [web form for specifying your lab preference](https://docs.google.com/forms/d/e/1FAIpQLSf-lvGEalwTetpdbNDnRgKSw7luFBuycTiZin_9r0Yzfl8Ujg/viewform?usp=sf_link).
 
-Use the `lab.txt` file to indicate your lab preference.  Open the file in a text editor and replace the file contents with a single line containing one of the four options listed below.  For example, if you have preference for Tuesday but could go on Wednesday,
-`lab.txt` should have one line that says `Tuesday`. If you can only make Wednesday,
-then the file should hold a single line that says `Wednesday, can't make Tuesday`. Your
-submission will be processed by an automated tool so **be sure to use the text exactly as it appears below**:
+### 4. Tell us whether you have your kit
 
-- `Tuesday`
-- `Tuesday, can't make Wednesday`
-- `Wednesday`
-- `Wednesday, can't make Tuesday`
+Use the `lab.txt` file to indicate whether you have received your kit. Write either
 
-Save the file.
+`I have my kit.`
 
-### 4. Commit your change
+or
 
-Git will recognize that you have edited a file in the repository.
+`I don't have my kit.`
+
+in the file and save it.
+
+### 5. Commit your change
+
+Git will recognize that you have edited a file in your local copy of the repository.
 Verify this by running `git status`:
 
 ```
@@ -154,15 +169,15 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 ```
 
-You *commit* your changes to record them into the repository history.
-The log of commits provides a history of changes to the code,
-akin to different versions.
+You *commit* your changes to your local repository to record them into the 
+repository history.  The log of commits provides a history of changes to the code.
 
-In order to commit a changed file, you must first *stage* the file. This
-fine-grained control allows you to selectively record changes.  For example, if 
+In order to commit a changed file, you must first *stage* it. This
+fine-grained control allows you to selectively record changes and more
+easily assemble what you want to commit.  For example, if 
 two files have been edited, you may want to only commit changes to one file.
 In this case, you would stage only the file of interest before committing,
-and changes to the other file will not be included.
+and changes to the other file will not be included. 
 
 Use `git add` to add a changed file to the staging area:
 
@@ -208,8 +223,19 @@ Date:   Thu Jan 9 13:05:11 2020 -0800
     Entered my lab preference.
 ```
 
+Staging also allows you
+to more easily commit multiple files in one single commit. With staging,
+you can move around in
+your directory, adding all of the files you want to commit, then once
+you have all of them, commit them together. This is important because you
+don't every want to code to be in an inconsistent or bad state. For example,
+if you add a new file that another file references, you want to put those
+two changes together in a single commit: the file shouldn't be there if it
+isn't referenced, and you don't want code to reference a file that doesn't
+exist.
 
-Each commit that you make records a snapshot of your work. You can use these snapshots to review your progress, compare versions, or identify and undo an unfortunate change.  Establishing good commit practices will give you the ability to navigate the history of
+Each commit that you make records a snapshot of your work. You can use these snapshots to review your progress, 
+compare versions, or identify and undo an unfortunate change.  Establishing good commit practices gives you the ability to navigate the history of
 code changes, as well as providing the opportunity to revert to previous
 versions.  Sometimes you may find that you want to revert to a commit before a
 set a changes that introduced a bug in your code.  The more you commit, the
@@ -219,7 +245,10 @@ detailed commit messages.**
 
 
 ### 5. Push to GitHub
-The commits you have made so far are stored only in your local repository.  The next step is to push those changes to GitHub, which synchronizes the remote repository to match your local copy. Pushing to GitHub is also necessary to share your work with the course staff for grading.
+The commits you have made so far are now stored in your local repository.  They're part of its
+history, so you can go back before them, move back to this specific commit, or use them
+in all kinds of useful ways. The next step is to push those changes to the central repository on
+GitHub. Pushing to GitHub is necessary to share your work with the course staff for grading.
 ```
 $ git push
 Counting objects: 3, done.
@@ -274,12 +303,20 @@ The pull request model is used by many modern software projects to promote good
 practices when working in a distributed development environment. The typical
 flow starts with a base branch (often called *master*) that reflects the master
 copy of the code. Feature development or bug fixing occurs by creating a new
-_branch_ where changes are made, followed by the submission of a _pull request_
-to the original base branch. Team members use the pull request to review the
-proposed changes and provide comments. Once the changes have been approved,
-they are merged back into the base branch. In this class, we use a similar
-model, except a grader will be reviewing your code and the base branch is the
-starter code.
+_branch_ where changes are made. Once you're confident that the code in your 
+branch is polished, tested, and working well, you can ask other people to merge
+the commits in your branch into *master* by making  a _pull request_. You've
+pushed commits to your branch, you're now asking other people to pull those
+commits into master. Team members use the pull request to review the
+proposed changes and provide comments. When a team member approves the pull request,
+GitHub automatically merges the commits back into the base branch.
+
+
+In this class, we use this same workflow so common in software development to
+review and grade your code. You write each assignment on a branch. To submit an 
+assignment, you make a pull request to merge it with the base branch, signifying
+your code is ready to be added to your slowly growing library of code you'll use
+to build your shell. The grader reviews your code and gives comments and bug reports.
 
 View the contents of your remote repository on the web at `https://github.com/cs107e/[YOUR-GITHUB-USERNAME]-assignments`. Switch to the branch `assign0-basic` by selecting it from the "Branch" drop-down menu.
 

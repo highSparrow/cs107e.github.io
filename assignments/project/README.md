@@ -21,66 +21,46 @@ and to do something creative with your Raspberry Pi. We hope you find the projec
 
 ### Project schedule and deliverables
 
-You have over two weeks to complete the project. 
-Please take note of these important milestones and deliverables in the project schedule:
+You have just under two weeks to complete the project. 
+We will update this page with more scheduling details as the end of the quarter approaches.
 
-#### Team formation due __6pm Mon Mar 2__
+#### Team formation and initial idea due __6pm Saturday May 9__
 
 Form a team of 1 to 3 people. We've observed that a 2-person team works out the best, so that is our recommendation. If you have a project in mind that would be better run as a solo effort or requires a team of 3, that's ok too, but you may want to talk it through with us to understand the tradeoffs and challenges for the different arrangements.
 
-Submit the Github usernames of your team members on this 
-[Google form](https://docs.google.com/forms/d/e/1FAIpQLSdJ9iKbXPDn7J8q0O-EVg3ihsTR9pB9C5L52gx_PXp-ER2nUw/viewform?usp=sf_link).
-We will create a shared repository for your team.
-
-#### Project lab 1 Tue/Wed
-
-The labs during final project period will be used as a working meeting for your team. You and your teammates should arrange to attend the same lab session for the next two weeks.
-
-In the first project lab, your team will brainstorm project options and refine those ideas into a specific project. You will then draft a plan submit as your project proposal.
-
-#### Proposal due __6pm Fri Mar 6__
-
-You will receive an email from GitHub when your team's repository is
-created. Clone this repository and edit the file `Proposal.md` file to add your
-project information. Commit and push to Github to submit your proposal.
-
-The project proposal should include:
+Decide a general idea of what you would like to do for your project. 
+The initial proposal should include:
 
 - Name of the project
-- Description of projectm goals
+- Description of project goals
+- What your completed project will be like
+- What you hope to learn, explore, or do in completing your project
 - Resources needed, budget
 - Team members and their responsibilities
     + Each team member should be responsible for a clearly
 identifiable part of the project.
-- Schedule
-    + Include list of midpoint milestones
-    + We will check-in with you during second project lab to review progress and path to success from there
 
-Each project team has a budget of $20 per person for hardware. Save your receipts to be reimbursed. If you need to mail order parts, it can take time,so figure out what you need ASAP and place the order. Also, first check the list of sensors we already have on hand.
+Each project team has a budget of $20 per person for hardware. 
 
-#### Project lab 2 Tue/Wed
+The "default" project is
+a version of [Flappy Bird](https://en.wikipedia.org/wiki/Flappy_Bird) called "Rappi Bird." You control a bird moving through a randomly
+generated level by hitting a button. The project involves handling I/O (button presses), graphics,
+and learning how to import sprites (e.g., the picture of your bird) into your C program. Optional
+extensions will include music, better graphics, or whatever strikes your fancy. Our expectation
+is that the basic version it will be 8-10 hours of work per person for a two-person group. If you 
+would like to do the default
+project, when you submit your project idea you can just say Rappi Bird or Default Project.
 
-In the second project lab, we will review your team's progress on meeting  midpoint milestones and ensure you are on-track for completing the remaining work.
-
-Please take advantage of this check-in with the course staff; we are eager for you to succeed with your project and want to help resolve any snags you encounter.
-
-#### Demo session is __9-11:30am Fri Mar 20__
-
-The demo session for the final projects is in our scheduled final exam slot. Each group should prepare a short demo of the project to deliver to the class. This is a fun event where you get to show off your work and see all the cool things done by your peers. There is much to celebrate!
-
-#### Final submission due __9am Fri Mar 20__
-
-Your team's github repository is used for coordinating the work throughout the project. Be sure to keep up regular commits as you progress. The final commit of your code must be received before the demo session, this is your project submission.
-
-As part of your final submission, edit the `README.md` file of your repository for the writeup of your completed project.  The writeup should include a short description of what work was performed by each member of the team.
-
-If your project was influenced by ideas or work of other people, please attribute those contributions in the writeup. In particular, if incorporating code from others, you must reference where you got the code, and what changes you made. It should be clear what you did, and what others did. Your project will be primarily evaluated on the portion of the work that is original.
+Submit your project idea and team on this 
+[Google form](https://forms.gle/phxnovNsQCMHtoQn7).
+We will create a shared repository for your team.
 
 #### Grading
 Our rubric for evaluating final projects considers two major areas and one bonus opportunity:
 
 +  __Challenge/Technical Achievement__.
-    This category evaluates the ambitiousness of the project and its goals. Our basic expectation is a project scope and level of effort roughly on par with the full console system. This was ~6 weeks of steady work for one person, and earned you a wealth of knowledge and an awesome `libmypi` code base. This puts you in prime position to start from there and achieve something equally cool with two people over 2.5 weeks. A project typically extends from and builds on the work you have done thus far. Learning new things, researching novel hardware, mastering advanced software techniques, digging in to overcome obstacles, and otherwise meeting additional challenges are all examples of efforts that will be further recognized in this category.
+    This category evaluates the ambitiousness of the project and its goals. 
+Console was ~6 weeks of steady work for one person, and earned you a wealth of knowledge and an awesome `libmypi` code base. This puts you in prime position to start from there and achieve something substiantial with two people over 2 weeks. A project typically extends from and builds on the work you have done thus far. Learning new things, researching novel hardware, mastering advanced software techniques, digging in to overcome obstacles, and otherwise meeting additional challenges are all examples of efforts that will be further recognized in this category.
       
 + __Execution__.
     This category evaluates the team’s execution on delivering on the project's goals. Our basic expectation is that the core functionality is operational and able to give a successful demo at the project session. Your further efforts to develop a fully complete set of features, add a high level of polish, design a system that is pleasing to use, build in robustness, and so on will be acknowledged as going above and beyond in the execution category. Execution success is highly correlated with strong teamwork, so your upfront investment in thoughtful planning, time management, and good engineering practice will pay off here.
@@ -94,9 +74,9 @@ In addition to going further with the components you have already used in the co
 
 - #### Sensors
 
-    We have a number of [different hardware sensors](sensors)
-    which you could use for your project; they're available for you to
-    check out in lab. Let us know if you'd like to use one of them.
+    We have experience with a number of [different hardware sensors](sensors)
+    which you could use for your project; we can discuss their use with you.
+    Let us know if you'd like to use one of them and we can provide guidance.
 
 - #### Part suppliers
 

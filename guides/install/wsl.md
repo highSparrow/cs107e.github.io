@@ -33,7 +33,7 @@ Windows OS does not natively support the development tools used in this course. 
 We will use Ubuntu version 16.04 under WSL.
 
 {% include callout.html type='warning'%}
-**NOTE**: Ubuntu 18.04 does not support all of the software requirements for the course! Make sure you select Ubuntu 16.04 when installing your Ubuntu system!
+**NOTE**: Ubuntu 18.04 does not support all of the software requirements for the course! Make sure you select the Ubuntu 16.04 application when installing your Ubuntu system!
 </div>
 
 1. Open the Microsoft Store app. Search for "Ubuntu", select `Ubuntu 16.04 LTS` and install it.
@@ -127,9 +127,6 @@ Note: Ubuntu 16.04 comes with a version of python installed, but it is an older 
     pyserial (3.4)
     xmodem (0.4.5)
     ```
-{% comment %}
-
-Julie Jan 2020,Windows 10 should be plug-and-play, will automatically download/install driver. I tested on brand new machine and confirmed it worked as advertised. Commenting out the instructions for manual install, but will leave here in case we later find we need to revive them
 
 ### Install CP2012 console driver
 
@@ -147,6 +144,11 @@ The console driver enables the bootloader client to communicate with the Pi over
 {% include callout.html type="danger" %}
 We are not sure the driver check step is reliable, as it may be that the driver will not show up in the list unless loaded. You won't be able to test loading the driver until you get your kit in lab1, so hang tight for now. Keep an eye on Piazza and we'll make a post if we discover a reliable way to confirm driver installation without loading it.
 </div>
+
+{% comment %}
+Sean April 2020, We had a few students that were having trouble with the driver, and were getting a "could not find CP2102 device" error. I'm adding the driver install instructions back now since the redundancy doesn't seem to break anything.
+
+Julie Jan 2020,Windows 10 should be plug-and-play, will automatically download/install driver. I tested on brand new machine and confirmed it worked as advertised. Commenting out the instructions for manual install, but will leave here in case we later find we need to revive them
 {% endcomment %}
 
 ### Finished

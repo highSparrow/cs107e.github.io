@@ -69,8 +69,6 @@ purple connector.
 
 ![PS/2 mini-din connector](images/ps2_keyboard_connector.jpg)
 
-We have a lending inventory of PS/2 keyboards. The TA will check out a keyboard to each of you in lab. The keyboard is yours to use for the quarter, but must be returned at the end of the course. Please keep track of it!
-
 Inspect the inside of the keyboard connector. It contains a plastic tab (that forces you to 
 plug it in with the correct polarity) and 6 male pins.
 Two pins are NC (not-connected), and the others carry VCC, GND, DATA and CLK.
@@ -113,7 +111,7 @@ Our convention uses white for clock and yellow for data. Add a white jumper conn
 
 You must also ground the channels on the logic analyzer. Identify the appropriate ground pin(s) for channels 0 and 1 and use jumpers to connect them to ground pins on your Raspberry Pi. There may be a separate ground per channel or one shared ground, depending on the model of logic analyzer you are using.
 
-You need to supply power to your keyboard.  Connect the GND and VCC jumpers from your keyboard connector to 5V and GND pins on your Raspberry Pi.
+You need to supply power to your keyboard.  Connect the VCC and GND jumpers from your keyboard connector to 5V and GND pins on your Raspberry Pi.
 
 Lastly, connect the USB cable from the logic analyzer to a USB port on your laptop.
 
@@ -125,8 +123,7 @@ In the Logic application, configure the logic analyzer to acquire the signal. Cl
 (megasample) per second and a duration of several seconds. 
 ![Saleae Setup](images/saleae_setup.png)
 
-
-
+If you are missing a logic analyzer or a keyboard, you can download a capture file [here](https://drive.google.com/drive/folders/1djr6z-jJJjwHe1XOf7VsKMHwFdqt30pw?usp=sharing). Download the file and load it from the drop-down menu labeled "options" in the top right corer of the Logic window.
 
 You can set a "trigger" in the Logic application to make it start recording whenever a certain channel does a specific thing (like when it "falls" from high to low). To access the trigger settings for a specific channel, click the small square button labeled "+ wave" next to that channel.  Set the trigger to start recording when the CLK signal (channel 0) is falling. 
 

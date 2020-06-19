@@ -1,7 +1,7 @@
 NAME = main
 
 OBJECTS = tricky.o
-CFLAGS = -g -Wall -Og -std=c99 -ffreestanding 
+CFLAGS = -g -Wall -std=c99 -ffreestanding 
 ASFLAGS = --warn --fatal-warnings
 LDFLAGS = -nostdlib -T memmap 
 

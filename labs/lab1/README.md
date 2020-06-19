@@ -26,7 +26,7 @@ __To prep for lab1:__
 
 {% endcomment %}
 
-*Lab written by Pat Hanrahan*
+*Lab written by Pat Hanrahan, updated by Philip Levis*
 
 ## Goals
 
@@ -35,34 +35,49 @@ During this lab you will:
 - Learn how to cross-develop on your computer for the Raspberry Pi's ARM processor.
 - Learn how to use a breadboard with LEDs and buttons.
 - Learn how to download and run bare metal programs on the Raspberry Pi.
+- Revisit the assembly code for the blink program and play with it a little.
 
 ## How does lab work?
 
-When you arrive at lab, find a partner and introduce yourself to one another.
-Together you will tackle the exercises below.
-Everyone is encouraged to collaborate with other labmates 
-to share insights and offer each other useful tips.
-The instructor and TA will circulate
-to offer advice and answers 
-so as to keep everyone progressing smoothly.
+When you arrive at lab, say hello and introduce yourself to your
+labmates.  Together you will tackle the exercises below.  Everyone is
+encouraged to collaborate with other labmates to share insights and
+offer each other useful tips. You pair up and use private messages to
+exchange notes, or just talk to one another. The instructor and TA
+will circulate to offer advice and answers so as to keep everyone
+progressing smoothly.
 
-Lab is a time to experiment and explore. After we introduce topics in readings/lectures, you'll do guided exercises in lab to further your understanding of the material, get hand-on practice with the tools in a supported environment, and ready yourself to succeed at this week's assignment.
+Lab is a time to experiment and explore. After we introduce topics in
+readings/lectures, you'll do guided exercises in lab to further your
+understanding of the material, get hand-on practice with the tools in
+a supported environment, and ready yourself to succeed at this week's
+assignment.
 
-Bare metal programming requires precision. A trivial typo or slight misunderstanding can stop your progress cold. Working with the support of your classmates and staff can make the difference between quickly resolving that sticking point versus hours of frustration wrestling on your own in the dark.
+Bare metal programming requires precision. A trivial typo or slight
+misunderstanding can stop your progress cold. Working with the support
+of your classmates and staff can make the difference between quickly
+resolving that sticking point versus hours of frustration wrestling on
+your own in the dark.
 
-Each lab has a set of check-in questions that we want you to answer as you go. Touch base with the staff on your answers to confirm your understanding and resolve any confusion. The check-in questions are intentionally simple and your responses are not graded; we use them as a gauge of how you're doing with the material so that we know better how to help guide you.
+Each lab has a set of check-in questions that we want you to answer as
+you go. Touch base with the staff on your answers to confirm your
+understanding and resolve any confusion. The check-in questions are
+intentionally simple and your responses are not graded; we use them as
+a gauge of how you're doing with the material so that we know better
+how to help guide you.
 
-To
-get the most out of lab, don't set your goal at merely finishing the absolute minimum required in the
-shortest possible time.  If you already have a good handle on the material, use the lab period to dive into further nooks and crannies or help out those peers who could benefit from your experience.  You should also
-get to know the instructors.  They are masters of the craft, and you will learn
-a lot by talking to them and asking them questions.  Any topic is fair game.
+To get the most out of lab, don't set your goal at merely finishing
+the absolute minimum required in the shortest possible time.  If you
+already have a good handle on the material, use the lab period to dive
+into further nooks and crannies or help out those peers who could
+benefit from your experience.  You should also get to know the
+instructors.  They are masters of the craft, and you will learn a lot
+by talking to them and asking them questions.  Any topic is fair game.
 
-The combination of hands-on experimentation,
-give and take with your peers,
-and the expert guidance of our staff 
-is what makes lab time truly special.
-Your sincere participation can really accelerate your learning!
+The combination of hands-on experimentation, give and take with your
+peers, and the expert guidance of our staff is what makes lab time
+truly special.  Your sincere participation can really accelerate your
+learning!
 
 ## Prelab preparation
 
@@ -91,14 +106,26 @@ repository. We recommend that you store your copy of the lab under your `cs107e_
     $ git clone https://github.com/cs107e/lab1
 
 <a name="step1"></a>
+
 ### 1. Assemble blink
-Change to the lab subdirectory that contains the `blink` example and build the `blink` program using these commands:
+
+To make sure your software tools are installed correctly, assemble the
+`blink` program from assembly code into a binary program.  Change to
+the lab subdirectory that contains the `blink` example and build the
+`blink` program using these commands:
 
     $ cd lab1/code/blink
     $ arm-none-eabi-as blink.s -o blink.o
     $ arm-none-eabi-objcopy blink.o -O binary blink.bin
 
-If above commands execute without error, you are good to go!
+
+The middle step compiles the assembly in `blink.s` into an "object
+file", a particular file format for binary code. An object file has a
+lot of information in it that we don't need -- we just want the
+program.  The last step, with `arm-none-eabi-objcopy`, turns this
+object file into a raw binary that has just the program named
+`blink.bin`.  If above commands execute without error, you are good to
+go!
 
 ### 2. Inventory your kit
 
@@ -110,37 +137,44 @@ Take a moment to identify all your parts and compare to the [kit inventory](/gui
 
 ### 3. Power your breadboard
 
-Next you will wire up a simple circuit on your breadboard to light an LED. For a quick introduction or refresher on using a breadboard, read this 2-minute [breadboard tutorial](https://www.losant.com/blog/how-to-use-a-breadboard).
-Which holes are connected to which other holes?
-How are the power and ground rails connected? 
+Next you will wire up a simple circuit on your breadboard to light an
+LED. For a quick introduction or refresher on using a breadboard, read
+this 2-minute [breadboard
+tutorial](https://www.losant.com/blog/how-to-use-a-breadboard).  Which
+holes are connected to which other holes?  How are the power and
+ground rails connected?
 
-Note that an LED is directional.
-The longer lead is the anode and the shorter lead is the cathode.
-The voltage from anode to the cathode should be positive.
-If the polarity of voltages are switched, the LED will not light up.
-A LED also needs a 1K current limiting resistor
-otherwise it can literally 
-[blow up in a fiery, smoky extravaganza](https://www.youtube.com/watch?v=WLctUO1DGtw)!
+Use your needlenose pliers to bend your wires. Don't snip your
+resistors short -- you will need them in future assignments, at which
+time you might snip them to fit perfectly when you have a much
+longer-term setup.
 
-In the photo below of our circuit,
-we connected the cathode of the LED to the 1K resistor 
-and then connected the other end of the resistor to the blue ground rail.
-Note how the LED crosses over the middle of the breadboard.
-To light up the LED, we need to apply power to the anode
+Note that an LED is directional.  The longer lead is the anode and the
+shorter lead is the cathode.  The voltage from anode to the cathode
+should be positive.  If the polarity of voltages are switched, the LED
+will not light up.  A LED also needs a 1K current limiting resistor
+otherwise it can literally [blow up in a fiery, smoky
+extravaganza](https://www.youtube.com/watch?v=WLctUO1DGtw)!
+
+In the photo below of our circuit, we connected the cathode of the LED
+to the 1K resistor and then connected the other end of the resistor to
+the blue ground rail.  Note how the LED crosses over the middle of the
+breadboard.  To light up the LED, we need to apply power to the anode
 and complete the circuit by connecting the cathode to GND.
 
 <img src="images/led.jpg" width="500">
 
-To check that the LED is working, you need to power the circuit.
-We will draw power from your laptop
-using a *USB to Serial Adapter* (hereafter referred to as just "USB-serial").
-This is the small black breakout board with a USB-A connector
-on one side and a 6-pin header on the other side.
-The USB connector is inserted into a USB-A port on your laptop. If your laptop does not have a USB-A port, you will need an adapter.
+To check that the LED is working, you need to power the circuit.  We
+will draw power from your laptop using a *USB to Serial Adapter*
+(hereafter referred to as just "USB-serial").  This is the small black
+breakout board with a USB-A connector on one side and a 6-pin header
+on the other side.  The USB connector is inserted into a USB-A port on
+your laptop. If your laptop does not have a USB-A port, you will need
+an adapter.
 
-When wiring, electronics gurus use colored wires to indicate what type of
-signal is being carried by that wire.
-This makes debugging tangled wires much easier.
+When wiring, people experienced in electronics use colored wires to
+indicate what type of signal is being carried by that wire.  This
+makes debugging wires and visualizing what's going on much easier.
 Generally, we will use the following conventions.
 
 -   Black (GND)
@@ -149,35 +183,59 @@ Generally, we will use the following conventions.
 -   Blue (host output)
 -   Green (host input)
 
-In this next step, we choose red and black jumpers because we are routing power and ground.
+In this next step, we choose red and black jumpers because we are
+routing power and ground.
 
-To provide power to your breadboard,
-do the following steps in **precisely this order**.
+To provide power to your breadboard, do the following steps in
+**precisely this order**.
 
 1. Pick out two female-male jumper cables, one red and one black.
 
-2. Connect the female ends of the jumpers to the header pins on the USB-serial breakout board. Connect the black jumper to the header labeled GND and the red jumper to the header labeled VCC.
+2. Connect the female ends of the jumpers to the header pins on the
+USB-serial breakout board. Connect the black jumper to the header
+labeled GND and the red jumper to the header labeled VCC.
 
-3. Connect the male ends of the jumpers to the breadboard. Plug the male end of the black jumper into the blue
-ground rail. Plug the male end of the red jumper to the LED anode (longer leg).  Remember to include the 1k resistor in the circuit between the LED cathode (shorter leg) and GND.
+3. Connect the male ends of the jumpers to the breadboard. Plug the
+male end of the black jumper into the blue ground rail. Plug the male
+end of the red jumper to the LED anode (longer leg).  Remember to
+include the 1k resistor in the circuit between the LED cathode
+(shorter leg) and GND.
 
-4. After double-checking that your circuit wiring is correct, you're ready to apply power. Plug the USB connector of the USB-serial into your laptop.
-A small led on the breakout board lights up to indicate that it has power.
-The LED on the breadboard connected to the red jumper should also be lit.
+4. After double-checking that your circuit wiring is correct, you're
+ready to apply power. Plug the USB connector of the USB-serial into
+your laptop.  A small led on the breakout board lights up to indicate
+that it has power.  The LED on the breadboard connected to the red
+jumper should also be lit.
 
 {% include callout.html type="danger" %}
 **Danger:** Don't have the USB-serial plugged in to your laptop
 while you are fiddling with the wiring.
 The breakout board provides power which means all the wires are live.
-This can cause a short circuit, which could fry your Pi.
+This can cause a short circuit, which could fry your Pi or make your
+laptop disable the USB port.
 </div>
 
+{% comment %}
 While the LED is lit, make the following measurements with the multimeter.
 
 -   Measure and record the voltage across the resistor.
 -   Measure and record the voltage across the LED.
 
 Calculate the current flowing through the LED. You should now be able to answer the first [check in question](checkin).
+{% endcomment %}
+
+If we had our standard physical lab, while the LED is lit, we'd ask
+you to make the following measurements with a multimeter.
+
+-   Measure and record the voltage across the resistor.
+-   Measure and record the voltage across the LED.
+
+Because you don't have a multimeter, instead, ask the staff member
+what these values are if you were to measure them. Using these
+provided values, calculate the current flowing through the LED. You
+should now be able to answer the first [check in question](checkin).
+
+
 
 ### 4. Power via the Pi
 
@@ -189,7 +247,9 @@ Re-wire your circuit to run power/ground from the USB-serial first to the Raspbe
 1. Connect power and ground from the USB-serial to the Raspberry Pi using two female-female jumpers. Use a black jumper to connect the GND of the USB-serial to a GND GPIO on the Pi. Similarly connect a red jumper for the 5V power.
 1. Connect power and ground from the Raspberry Pi to the breadboard using the two female-male jumpers.  The black jumper connects a GND GPIO to the blue ground rail on the breadboard. The red jumper connects a 5V GPIO to the LED anode.
 
-Power is now flowing from the USB-serial to the Raspberry Pi and then to the breadboard.
+Power is now flowing from the USB-serial to the Raspberry Pi and then to the breadboard. Please note that the pin layout on the USB-serial you have may
+be different than the one in the picture: pay attention to what the pins
+are labeled, not their physical location.
 
 <img src="images/piled.jpg" width="500">
 
@@ -246,6 +306,8 @@ Follow these steps in order:
 
 1. Copy the four files from the firmware folder onto the SD card.
     - On Mac, you can use either do this in the shell or using Finder. 
+
+        `cp ~/cs107e_home/cs107e.github.io/firmware/* /Volumes/NO\ NAME`
     - On Windows, you can access the SD card only in in File Explorer, not the WSL shell. After changing to the firmware directory in your WSL shell, use the command `explorer.exe .` to show the current directory contents in File Explorer and you can copy those files to the SD card.
 
 2. On the SD card, make a copy of `blink-actled.bin` named  `kernel.img`.

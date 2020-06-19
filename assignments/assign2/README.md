@@ -54,9 +54,18 @@ Skim through each of the provided files to learn the overall structure of the pr
 For this assignment, you will implement functions
 across three different C files: `gpio.c`, `timer.c`, and `apps/clock.c`.  The first two files implement reusable modules, the latter is the application program file. **Do not create any new source files or directories; add your code by editing the given files.**
 
-The `gpio` and `timer` modules provide access to two of the Raspberry Pi peripherals. The `gpio` module has routines that control the GPIO pins and the `timer` module retrieves the system tick count. The two modules are used by the clock application, but, more broadly, these modules are designed to be reusable in any future application that requires similar functionality. These two modules are the first of many more to come. By the end of the quarter, you will have implemented a complete set of modules that you can package into a library of core functions for the Raspberry Pi.
+The `gpio` and `timer` modules provide access to two of the Raspberry Pi peripherals. The `gpio` module has routines that control the GPIO pins and the `timer` module retrieves the system tick count. The two modules are used by the clock application, but, more broadly, these modules are designed to be reusable in any future application that requires similar functionality. These two modules are the first of many more to come. By the end of the quarter, you will have implemented a complete set of modules that you be a library of core functions for your Raspberry Pi, sufficient to write your text console.
 
-A module is divided into an _interface_ and its _implementation_. The module interface is described in its header file, e.g. `gpio.h` or `timer.h`. Each public function is listed with its name, prototype, and documentation about what the function does. The module implementation is in the corresponding `.c` file where those functions are defined. 
+Each module is divided into an _interface_ and its _implementation_. The module interface is described in its header file, e.g. `gpio.h` or `timer.h`. Each public function is listed with its name, prototype, and documentation about what the function does. The module implementation is in the corresponding `.c` file where those functions are defined. 
+
+This idea of
+separating interface and implementation is fundamental to all software engineering:
+projects might choose different file naming conventions, but they always separate 
+interface from implementation. It allows someone using the module to not have to think
+about how its implemented, so keeps pieces of software self-contained and independent. It
+also allows you to change the implementation without causing any problems -- this may become
+very valuable towards the end of the course, if you want to swap out your implementation
+for a reference one written by the CAs.
 
 For the `gpio` and `timer` modules, we specify the module interface; it is your job to write the module implementation to match it. You are not to change anything in the `gpio.h` and `timer.h` header files. All your edits will be in the `gpio.c` and `timer.c` source files. You should not export additional public `gpio_` or `timer_` functions. However, you can add your own private helper functions by declaring those functions at the top of the C file with the `static` keyword to make them only accessible to the implementation. 
 
@@ -102,7 +111,7 @@ resistors on your breadboard that drive segments A through G. GPIO 20 controls s
 1 through 4. GPIO 10 controls the first digit, GPIO 11 the second digit, and so on.
     - Connect GPIO 2 to the red start button. The start button should be connected to the power rail through a 10K pull-up resistor; making the default state high. Pressing the button grounds the circuit, pulling the reading low.
 - At this point if you output 3.3V on GPIO 20 and 3.3V on GPIO 10, you should turn on segment A of digit 1. Hooray!
-- Snap a photo of your finished hardware setup and commit the image file to your repo. We want to see your beautiful handiwork!
+- Snap a photo of your finished hardware setup, add the photo to your repo with the name `board`, and commit the image file to your repo. We want to see your beautiful handiwork!
 
 ![clock connected](images/clock_connected.jpg){: width="80%"}
 Here's a photo of our clock breadboard connected to the Raspberry Pi. We selected jumper colors in a repeating pattern (yellow-green-blue-violet) to help identify which connection is which.
@@ -227,7 +236,8 @@ the digits so fast that our eyes cannot see them changing. Good thing
 computers are fast!
 
 Implement the display refresh loop in `apps/clock.c`. Use the functions from the `timer` module to control the wait time. Loop though all
-four digits, turning each on for 2500 microseconds. Do you see any flicker?
+four digits, turning each on for 2500 microseconds. Do you see any flicker? How long
+does the delay have to for you to start to see it?
 
 #### 6. Implement clock
 
@@ -302,12 +312,10 @@ To grade this assignment, we will:
 + Go over the tests you added to `tests/test_gpio_timer.c` and evaluate them for thoughtfulness and completeness in coverage.
 + Review your code and provide feedback on your design and style choices.
 
-Note 1: The automated tester will __deduct half a point for any warnings generated
-when compiling your code__. Warnings are the way the compiler draws attention to a code passage that isn't an outright error but appears suspect. Some warnings are mild/harmless, but others are critically important. If you get in the habit of keeping your code compiling cleanly, you'll never miss a crucial message in a sea of warnings you are casually ignoring. You may want to consider adding the flag `-Werror` to CFLAGS in your Makefile.
-This converts all warnings into hard errors, which block the build and guarantees no warnings will be overlooked and left unresolved.
+Note 1: The automated tester will __deduct one point for any warnings generated when compiling your code__. Warnings are the way the compiler draws attention to a code passage that isn't an outright error but appears suspect. Some warnings are mild/harmless, but others are critically important. If you get in the habit of keeping your code compiling cleanly, you'll never miss a crucial message in a sea of warnings you are casually ignoring. By default, all warnings will be treated as errors in your makefile, and your code will be graded in the same way
 
 Note 2: If your modules have failures on the automated tests, we will report those to you by filing issues.  To promote the practice of fixing your bugs, you will have the opportunity to re-submit with corrections for these issues for a
 partial refund of the points originally deducted.
 Furthermore, fixing bugs in your modules now will put you in a better place to earn
-the full system bonus at the end of the quarter. The system bonus points are awarded for submitting a working system using entirely your own code written for the assignments.
+the full system bonus at the end of the quarter. The system bonus points are awarded for submitting a working system using entirely your own code written for the assignments. 
 

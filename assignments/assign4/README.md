@@ -27,7 +27,9 @@ library implementer to add a debugging aid (`backtrace.c`)
 and a heap allocator (`malloc.c`) to your growing
 collection of foundational routines. 
 
-Global and local variables have been sufficient for our needs thus far, but adding support for dynamic allocation will enable more sophisticated applications. Dynamic allocation offers the programmer explicit and 
+Global and local variables have been sufficient for our needs thus far, but 
+to support more complex applications we'll need support for dynamic allocation 
+Dynamic allocation (a heap) offers the programmer explicit and 
 direct control over sizing and lifetime of storage. With this
 power comes with the responsibility to properly allocate and
 deallocate that memory. Using dynamic memory correctly and safely is a
@@ -40,11 +42,15 @@ After you finish this assignment, you will:
 
 - further understand C data structures and memory layout,
 
-- have leveled up your skills wrangling pointers in C, and
+- have more experience managing pointers in C, and
 
-- appreciate the complexity and tradeoffs in implementing a heap allocator.
+- appreciate some of the complexity and tradeoffs in implementing a heap allocator.
 
-Each new assignment also provides much opportunity for you to reap the benefits of the hard work you invested in previous weeks. For the rest of quarter, let the refrain "my `printf` rocks!" ring out loud and proud.
+Each new assignment also provides many opportunities to appreciate and value your
+hard work in previous weeks. You'll come to love how much easier _your_ `printf` makes
+your testing and debugging.  By the end of the quarter, almost every single 
+instruction in your fully functioning console will be from code you have written
+and know well: you'll understand your whole system from the ground up.
 
 ## Get starter files
 Change to the `cs107e.github.io` repository in your `cs107e_home` and do a `git pull` to ensure your courseware files are up to date.
@@ -56,18 +62,14 @@ $ git fetch origin
 $ git checkout assign4-basic
 ```
 
-Verify that the files `gpio.c`, `timer.c`, `strings.c`, and `printf.c` in your assign4-basic branch are up-to-date versions of your modules.  The `git merge` command can be used to incorporate changes from another branch. For example, if you fixed issues in `gpio.c` or `timer.c` for an assignment 2 resubmit, use `git merge assign2-basic` to merge those changes into your current branch.  If you continued work on `assign3-basic`
-after your assign4-basic branch was created, use `git merge assign3-basic` to merge those latest updates.
-
-You have the option of building on your own code as you move forward or switching out your modules for our library versions. Edit the setting `MY_MODULES` in the Makefile to control which modules of yours are used and which of ours.
+You have the option of building on your own code as you move forward or switching out your modules for our library versions. Edit the setting `MY_MODULES` in the Makefile to control which modules of yours are used and which of ours. Verify that the files `gpio.c`, `timer.c`, `strings.c`, and `printf.c` in your assign4-basic branch are up-to-date versions of your modules fi you would like to use your implementations from previous assignments.  The `git merge` command can be used to incorporate changes from another branch. For example, if you are missing your code in `gpio.c` or `timer.c` from assignment 2, use `git merge assign2-basic` to merge those changes into your current branch (while you have the assign4-basic branch checked out).  If you continued work on `assign3-basic` after your assign4-basic branch was created, use `git merge assign3-basic` to merge those latest updates. Using your own modules now will put you on track to receive the full system integration bonus after completing assignment 7.
 
 The starter project contains the files `backtrace.c` and
 `malloc.c`, the sample application program `apps/heapclient.c`, and the test program `tests/test_backtrace_malloc.c`. 
 
 You will edit `backtrace.c` and `malloc.c` to implement the required functions. You will also add many tests to `tests/test_backtrace_malloc.c`.  The program `apps/heapclient.c` is used unchanged as a sample application.
 
-The `make install` target of the Makefile builds and runs the sample application `apps/heapclient.bin`. The `make test` target builds and runs the test program `tests/test_backtrace_malloc.bin`. With no argument, 
-`make` will build both, but not run. You can use the debugger in simulator mode on the corresponding ELF file, e.g. `arm-none-eabi-gdb tests/test_backtrace_malloc.elf`.
+The `make install` target of the Makefile builds and runs the sample application `apps/heapclient.bin`. The `make test` target builds and runs the test program `tests/test_backtrace_malloc.bin`. With no argument, `make` will build both, but not run. You can use the debugger in simulator mode on the corresponding ELF file, e.g. `arm-none-eabi-gdb tests/test_backtrace_malloc.elf`.
 
 ## Basic section
 
@@ -189,7 +191,7 @@ The essential requirement for any heap allocator is that it correctly service an
 
 #### Malloc specification
 
-Refer to the module documentation in [malloc.h](https://github.com/cs107e/cs107e.github.io/blob/master/cs107e/include/malloc.h) for the operational behavior of each function. Other than the non-negotiable stipulation to correctly service all valid requests, there are very requirements to the specification itself. 
+Refer to the module documentation in [malloc.h](https://github.com/cs107e/cs107e.github.io/blob/master/cs107e/include/malloc.h) for the operational behavior of each function. Other than the non-negotiable stipulation to correctly service all valid requests, there are very few requirements to the specification itself. 
 
 All pointers returned by `malloc` are required be aligned to 8 bytes, the size of the largest primitive type on our system. 
 
@@ -355,17 +357,12 @@ The deliverables for `assign4-basic` are:
 
 Submit the finished version of your assignment by making a git “pull request”. Make separate pull requests for your basic and extension submissions.
 
-The automated checks make sure that we can run your C
-code and test and grade it properly, including swapping your tests for
-ours.
+Be sure to check that your submission:
 
-CI verifies that:
+- does not edit `src/apps/heapclient`. You should not need to make any edits to this file
 
-- `apps/heapclient.c` is unchanged
+- `make` and `make test` build successfully (and there are no warnings or errors!)
 
-- `make` and `make test` successfully build
-
-- `make test` also successfully builds with the unchanged version of the test program in the starter
 
 ## Grading
 
@@ -377,6 +374,8 @@ To grade this assignment, we will:
 - Review your code and provide feedback on your design and style choices.
 
 ## Heap alligators
+A note from Julie Zelenski, CS Lecturer, featuring a drawing from our very own Jane :D
+
 At home, my chatter about "heap allocators" was mistaken for "heap alligators" by my kids, who were alarmed that I would ask my students to wrestle with such fearsome beasts. 
 
 A family trip to Gatorland taught us that a heap __of__ alligators can actually be quite cute (see photo) and the adorable drawing from Jane Lange (talented CS107e alum and undergrad TA) demonstrates that a tamed heap alligator makes a lovely pet. May you, too, tame your heap alligator and triumph over the perils of dynamic allocation.

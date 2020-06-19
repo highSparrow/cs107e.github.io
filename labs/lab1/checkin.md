@@ -11,4 +11,6 @@ title: 'Lab 1: Check-in'
 
 4. How can you use the blink program to experimentally estimate the number of instructions per second executed by the ARM processor in the Raspberry Pi?
 
-Please dispose of any trash, return all tools to the shelves & leave your workspace as clean as you found it.
+Clean up all of your tools and your kit, putting everything back into its
+place. Your workspace is like Julia Child's kitchen: keep it clean, keep
+it orderly!

@@ -48,15 +48,15 @@ functions you will learn:
 
 This is a difficult assignment, so...
 
-1. **Mindset**. Your skills with memory-wrangling and C pointers will grow leaps and bounds in completing this assignment, but you will work hard for it and you're likely to encounter some tough bugs along the way. You can do this!  If you start to lose momentum, reach out for help and we can get you back on track.
-1. **Start early**. This gives you time to think things through, to take advantage of office hours, to take a break and clear your head when stalled, to back out from a decision that didn't work out, to pause and appreciate all that you are learning.  In contrast, getting a late start means working non-stop under the unpleasant stress of a looming deadline.
+1. **Mindset**. Completing this assignment will exercise everything we've been talking in class about memory, pointers and strings. When you're done, you'll understand these topics well, but you will work hard for it and you're likely to encounter tough bugs along the way. If you start to lose momentum, reach out for help so we can help you get back on track.
+1. **Start early**. This gives you time to think things through, to take advantage of office hours, to take a break and clear your head when stalled, to back out from a decision that didn't work out, to pause and appreciate all that you are learning.  In contrast, getting a late start means working non-stop under the unpleasant stress of a looming deadline. Some bugs take ten minutes, some take two hours, and you never know which one it will be. If you start early, hitting a two-hour bug won't stress you out. But if you do hit such a doozy, please reach out to us so we can help you tackle the problem!
 1. **Follow good development and debugging practice**, just like you learned in lab. Now is the time to build up your mad gdb skills. Take to heart our recommended [Strategies for Success](#strategies-for-success). This will help you complete the assignment more efficiently and with less strife. 
 1. **Test as you go**. Spending 10 minutes to write a test
 can save you hours of debugging time later.
 1. **Commit often**. If you modify your code and break it you can easily go back to a working version. 
+1. **You have a reference.** All of these functions are part of the C standard libraries. If you are unsure of how they should behave, or what the output should be, try them on your local machine, or in a [friendly web-based compiler](https://www.onlinegdb.com/online_c_compiler).
 
-
-We know this assignment is a big step up, and you will learn a tremendous amount in completing it. We have many quarters of experience helping students succeed on this assignment, and we know you can triumph! But please, please, please follow our recommendations so you can not only end with a satisfying result, but also have an enjoyable journey.
+We have many quarters of experience helping students succeed on this assignment, and we know it's within your ability! But please, please, please follow our recommendations so you complete successfully and also have an enjoyable journey.
 
 ## Get starter files
 Change to the `cs107e.github.io` repository in your `cs107e_home` and do a `git pull` to ensure your courseware files are up to date.
@@ -363,12 +363,10 @@ lack of a working printf to help you debug.  Here are a couple of strategies you
 - Liberal use of `assert()` tests. For example, you can test the output
   written by `signed_to_base` matches the expected output by asserting the two
   strings `strcmp` as equal. Note that the version of `assert` used from here forward calls `uart_putstring` to print out details (i.e. line number, failed expression), so you are no longer limited to interpreting red and green smoke signals.
-- A somewhat more complicated arrangement is to debug using our `printf` from `libpi.a` You can use our `printf` in conjunction with yours if you first disambiguate the names. Here's how:
-    - Rename all of your functions in `printf.c` to add `my_` prefix, e.g. `my_printf` and `my_signed_to_base`. 
-    - Change all references throughout your code to match your renamed functions (e.g.  `my_printf` calls `my_vsnprintf` and so on). 
-    - After renaming your versions, you can now use `printf` to access to the libpi version. For example, in `tests/test_strings_printf.c` you call `my_printf` to test your function, and within your `my_printf` implementation, you can call `printf` to output internal values
-for debugging. 
-{% include callout.html type="danger" %}**WARNING:** Our implementation of `printf` will call on __your__ string functions in `strings.c`. You should be certain that your string functions are robust for this path to work. Also be careful that you call the `my_` versions in your tests. A slip-up may cause you to mistakenly conclude your version is working when you were in fact testing our version, not your own.
+- A somewhat more convenient arrangement is to debug using our `ref_printf` from `librefpi.a`. This is a duplicate of our implementation of printf for you to use to help debug your own implementation. You can use `ref_printf` as needed, but make sure you remove all calls to this function before you submit the assignment!
+    - Using this function will cause warnings to be generated when you compile your code. Since we include the `-Werror` flag in your Makefiles, this warning is treated as an error. In order to successfully compile your code, you'll need to temporarily remove the `-Werror` flag from the makefile while you're using the `ref_printf` implementation
+    - If you forget to remove all calls to `ref_printf` in your final code submission, your code will fail our autograder `make` test, and you will automatically have 1 point deducted from your assignment score :/ so don't forget!
+{% include callout.html type="danger" %}**WARNING:** Our implementation of `ref_printf` will call on __your__ string functions in `strings.c`. You should be certain that your string functions are robust for this path to work. Also be careful that you call the `ref_` versions in your tests. A slip-up may cause you to mistakenly conclude your version is working when you were in fact testing our version, not your own.
 </div>
 
 ## Extension: disassembler
@@ -380,7 +378,7 @@ The extension is to put your shiny new `printf` to work in writing a program tha
 
 Reading from left to right, the upper four `cond` bits indicate conditional execution, the next three bits are `000` indicate this is a data processing instruction with an immediate operand 2, the four `opcode` bits determine which kind of operation (add, subtract, etc), the `S` bit determines whether the flags are set, and so on. 
 
-In lecture, Pat asked you to play the role of _assembler_ by translating an instruction such as  `add r3, r4, r5` into `e0843005`. The reverse process is a _disassembler_ which picks apart the bits of the encoded instruction `e0843005` to print out `add r3, r4, r5`.  The extension is to automate this disassembly process and produce output like that shown below:
+In lecture, Phil asked you to play the role of _assembler_ by translating an instruction such as  `add r3, r4, r5` into `e0843005`. The reverse process is a _disassembler_ which picks apart the bits of the encoded instruction `e0843005` to print out `add r3, r4, r5`.  The extension is to automate this disassembly process and produce output like that shown below:
 
     ...
     0x00008074: e0 43 30 05    add r3, r4, r5
@@ -412,12 +410,13 @@ following the steps given in the [Assignment 0 writeup](/assignments/assign0/).
 Make separate pull requests for your basic and extension
 submissions.
 
-The automated checks ensure that we can successfully build your C
-code and will be able to properly test and grade it. CI verifies that:
+Before submitting, you should make sure that:
 
 - `apps/print_pinout.c` is unchanged
 - `make` and `make test` successfully build
 - `make test` also successfully builds with the unchanged version of the test program in the starter
+
+IF any of these tasks are not successful, you will automatically have 1 point deducted from the assignment.
  
 ## Grading
 
@@ -429,8 +428,7 @@ To grade this assignment, we will:
 + Review your code and provide feedback on your design and style choices.
 
 Note 1: The automated tester will __deduct half a point for any warnings generated
-when compiling your code__. Warnings are the way the compiler draws attention to a code passage that isn't an outright error but appears suspect. Some warnings are mild/harmless, but others are critically important. If you get in the habit of keeping your code compiling cleanly, you'll never miss a crucial message in a sea of warnings you are casually ignoring. You may want to consider adding the flag `-Werror` to CFLAGS in your Makefile.
-This converts all warnings into hard errors, which block the build and guarantees no warnings will be overlooked and left unresolved.
+when compiling your code__. Warnings are the way the compiler draws attention to a code passage that isn't an outright error but appears suspect. Some warnings are mild/harmless, but others are critically important. If you get in the habit of keeping your code compiling cleanly, you'll never miss a crucial message in a sea of warnings you are casually ignoring. We use the `-Werror` flag in your makefiles to help you catch your warnings. This converts all warnings into hard errors, which block the build and guarantees no warnings will be overlooked and left unresolved.
 
 Note 2: If your modules have failures on the automated tests, we will report those to you by filing issues.  To promote the practice of fixing your bugs, you will have the opportunity to re-submit with corrections for these issues for a
 partial refund of the points originally deducted.

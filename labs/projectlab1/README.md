@@ -1,7 +1,7 @@
 ---
 released: true
 permalink: /labs/projectlab1/
-title: 'Project Lab 1: What is Your Project?'
+title: 'Project Lab: Getting Started'
 readings: |
   + Plan to attend the same lab as your teammates
 ---
