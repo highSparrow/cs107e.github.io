@@ -3,19 +3,20 @@
 #include "gpioextra.h"
 #include "midi.h"
 
-#define MIDI_PIN GPIO_PIN25
-#define BAUD     31250
+#define MIDI_PIN GPIO_PIN26
+#define BAUD     31750
 #define DELAY    (1000000 / BAUD)
 
 static unsigned int channel = 0;
 
 void midi_init(void) {
   gpio_set_output(MIDI_PIN);
-  gpio_write(MIDI_PIN, 1);
-  //gpio_set_pulldown(MIDI_PIN);
+//  gpio_write(MIDI_PIN, 0);
+//  gpio_set_pulldown(MIDI_PIN);
 }
 
 inline void send_bit(uint8_t val) {
+  //gpio_write(MIDI_PIN, val? 0:1);
   gpio_write(MIDI_PIN, val);
   timer_delay_us(DELAY);
 }

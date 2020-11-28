@@ -1,12 +1,12 @@
-#NAME = midi-beat
-NAME = midi-lamb
+NAME = midi-beat
+#NAME = midi-lamb
 MODULES = midi.o
 
 CFLAGS = -I$(CS107E)/include -g -Wall -Og -std=c99 -ffreestanding
 LDFLAGS = -nostdlib -T memmap -L$(CS107E)/lib
 LDLIBS = -lpi -lgcc
 
-all : $(NAME).bin
+all : midi-beat.bin midi-lamb.bin
 
 %.bin: %.elf
 	arm-none-eabi-objcopy $< -O binary $@

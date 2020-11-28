@@ -31,7 +31,7 @@ For this week’s assignment, you will implement a PS/2 keyboard driver and impl
 
 In completing this assignment you will have:
 
--  written code that interfaces with an input device. When you next download a device driver, you will say "I have a decent idea how that code operates"
+- written code that interfaces with an input device. When you next download a device driver, you will say "I have a decent idea how that code operates"
 - seen the design of a complex interface into hierarchical levels and appreciated its benefits
 - implemented a simple command-line interpreter
 - explored the use of C function pointers for callbacks and command dispatch
@@ -39,23 +39,48 @@ In completing this assignment you will have:
 This is a fun assignment, and brings us back to using physical devices and making them do cool things. These additions are the first steps toward turning your humble little Raspberry Pi into a standalone personal computer.
 
 ## Get starter files
-Change to the `cs107e.github.io` repository in your `cs107e_home` and do a `git pull` to ensure your courseware files are up to date.
 
-To get the assignment starter code, change to your local repository, fetch any changes from the remote and switch to the assignment basic branch:
+To ensure that your courseware files are up to date, do a pull in the `cs107e.github.io`
+repo. 
+
+```
+$ cd ~/cs107e_home/cs107e.github.io
+$ git pull
+```
+
+To ensure that you have the latest starter code, change to your local assignments
+repo, checkout the master branch, and pull from the starter code remote.
+
 ```
 $ cd ~/cs107e_home/assignments
-$ git fetch origin
-$ git checkout assign5-basic
+$ git checkout master
+$ git pull starter-code master
 ```
 
-Read the `Makefile` for information on how to reuse the modules you have written for previous assignments. 
+Now create your `assign5-basic` branch, merge in your work from `assign4-basic`,
+and create the `Makefile` symlink.
 
-Verify that your project has up-to-date versions of
-your modules `gpio.c`, `timer.c`, `strings.c`, `printf.c`, `backtrace.c` and `malloc.c`.  If you are missing updates made on a different branch, use `git merge` to incorporate those changes. For example, if you made a regrade submission on `assign3-basic` and want to add those changes into `assign5-basic`, have `assign5-basic` checked out and use `git merge assign3-basic`.
+```
+$ git checkout -b assign5-basic
+$ git merge assign4-basic
+$ ls -l Makefile
+$ ln -sf $(pwd)/makefiles/assign5.makefile $(pwd)/Makefile
+```
 
-The starter project contains the module files `keyboard.c` and `shell.c`, the application program `apps/uart_shell.c` and the test program `tests/test_keyboard.c`. You will edit `keyboard.c` and `shell.c` to implement the required functions. You can add tests to `tests/test_keyboard.c`. The program `apps/uart_shell.c` is used unchanged as a sample application which tests your shell program.
+Verify that your project has up-to-date versions of your modules `gpio.c`, `timer.c`,
+`strings.c`, `printf.c`, `backtrace.c` and `malloc.c`. 
 
-The `make install` target of the Makefile builds and runs the sample application `apps/uart_shell.bin`. The `make test` target builds and runs the test program `tests/test_keyboard.bin`. With no argument, `make` will build both, but not run. 
+Here are the files of interest for this week:
+- `src/lib/keyboard.c`: you'll implement the required functions within this module.
+- `src/lib/shell.c`: you'll implement the required functions within this module.
+- `src/tests/test_test_keyboard.c`: you'll add many tests to this file to
+  verify that your implementations work as expected.
+- `src/apps/uart_shell.c`: you'll leave this file unchanged but use it as a
+  sample application to test your shell.
+
+The `make install` target of the Makefile builds and runs the sample application
+`src/apps/uart_shell.c`. The `make test` target builds and runs the test program 
+`src/tests/test_keyboard.c`. With no argument, `make` will build both, but not run. 
 
 ## Basic part
 
@@ -375,30 +400,19 @@ If you wrote the disassemble extension for assign3 (or you want to do it now!), 
 ## Submit
 The deliverables for `assign5-basic` are:
 
-  - Implementation of the `keyboard.c` and `shell.c` modules
-  - Your comprehensive keyboard tests in `tests/test_keyboard.c`
+  - Implementation of the `src/lib/keyboard.c` and `src/lib/shell.c` modules
+  - Your comprehensive keyboard tests in `src/tests/test_keyboard.c`
 
 Submit the finished version of your assignment by making a git “pull request”. Make separate pull requests for your basic and extension submissions.
 
-The automated checks make sure that we can run your C
-code and test and grade it properly, including swapping your tests for
-ours.
-
-CI verifies that:
-
-- `apps/uart_shell.c` is unchanged
-
-- `make` and `make test` successfully build
-
-- `make test` also successfully builds with the unchanged version of the test program in the starter
 
 ## Grading
 To grade this assignment, we will:
 
 - Verify that your submission builds correctly, with no warnings. Warnings and/or build errors result in automatic deductions. Clean build always!
-- Run automated tests that exercise the functionality of your `keyboard.c` and `shell.c` modules. These tests will touch on all required features of the module.  
+- Run automated tests that exercise the functionality of your `src/lib/keyboard.c` and `src/lib/shell.c` modules. These tests will touch on all required features of the module.  
 - Our automated testing requires that your shell has absolute consistency in calling `shell_printf` for all shell output. Double-check that you are compliant. Also be sure to have removed or commented out all `printf` calls inserted for debugging.
-- Go over the tests you added to `tests/test_keyboard.c` and evaluate them for thoughtfulness and completeness in coverage.
+- Go over the tests you added to `src/tests/test_keyboard.c` and evaluate them for thoughtfulness and completeness in coverage.
 - Review your code and provide feedback on your design and style choices.
 
 ![nice job!](https://media.giphy.com/media/l2SqesOmvIdj1RExq/giphy.gif)

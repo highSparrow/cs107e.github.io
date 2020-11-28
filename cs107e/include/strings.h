@@ -30,7 +30,7 @@ size_t strlen(const char *s);
  * Lexicographically compare the null-terminated strings `s1` and `s2`.
  *
  * Returns an integer value greater than, equal to, or less than 0, according
- * to whether the string `s1` is greater than, equal to, or less than 
+ * to whether the string `s1` is greater than, equal to, or less than
  * the string `s2`. Comparison is done as unsigned characters.
  */
 int strcmp(const char *s1, const char *s2);
@@ -44,12 +44,12 @@ int strcmp(const char *s1, const char *s2);
  *
  * `strtonum` processes the characters of `str`, stopping at the first
  * character that is not a valid digit in the base or at the terminating
- * null (whichever comes first).  The function is not required to support 
+ * null (whichever comes first).  The function is not required to support
  * leading spaces or a plus/minus sign. Such characters can be
  * treated as invalid and stop the conversion.
  *
- * The argument `endptr` is an output parameter optionally used to  
- * communicate back to the caller what characters remain in `str` after having 
+ * The argument `endptr` is an output parameter optionally used to
+ * communicate back to the caller what characters remain in `str` after having
  * "consumed" the digit characters. A caller can pass NULL for `endptr`
  * if they do not need this information.
  *
@@ -65,12 +65,15 @@ unsigned int strtonum(const char *str, const char **endptr);
 
 /*
  * Size-bounded string concatenation. Append the null-terminated string `src`
- * to the end of `dst`. Appends at most `maxsize - strlen(dst) - 1` bytes, and
- * null-terminates `dst`. If `dst` and `src` overlap, the behavior is undefined.
+ * to the end of `dst`. `dst` may or may not be null terminated. If `dst` is
+ * null terminated, `strlcat` appends at most `maxsize - strlen(dst) - 1` bytes, and
+ * null-terminates `dst`. If `dst` is not null terminated, `strlcat` writes
+ * nothing to `dst`. If `dst` and `src` overlap, the behavior is undefined.
  *
- * Returns the initial length of `dst` plus the length of `src`. This is 
- * equal to the number of characters that would have been written to `dst` if 
- * there were space.
+ * Returns the initial length of `dst` plus the length of `src`. This is
+ * equal to the final size of `dst` if there were space to write all of
+ * `src`. If `dst` is not null terminated, this is equal to `maxsize
+ * + strlen(src)`.
  */
 size_t strlcat(char *dst, const char *src, size_t maxsize);
 

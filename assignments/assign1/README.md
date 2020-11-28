@@ -61,9 +61,7 @@ Each assignment is structured into a basic part and one or more proposed extensi
 Check out our website pages [assignments](/assignments/#faq) and [course policies](/policies) for more information on assignments, grading, lateness, and collaboration.
 
 #### YEAH! = Your Early Assignment Help
-Sean will hold a YEAH session for each assignment every Thursday, during the first hour of his office hours (usually 1pm - 3pm PDT). Come join us and kickstart your work! We'll have a working version to demo and share best practices for success, highlight tricky details, warn of pitfalls to avoid, answer your questions, and more.
-
-This week, YEAH hours will run from 12pm - 1pm PDT since Sean's office hours are shifting (just for this week!). Look out for announcements on Piazza about YEAH hours each week. YEAH
+We will hold a YEAH session for each assignment every Thursday. Come join us and kickstart your work! We'll have a working version to demo and share best practices for success, highlight tricky details, warn of pitfalls to avoid, answer your questions, and more. Look out for YEAH hour announcements on Piazza.
 
 ## Basic part: simple scan pattern
 
@@ -87,21 +85,64 @@ $ cd ~/cs107e_home/cs107e.github.io
 $ git pull
 ```
 
-To get the assignment starter code, change to your local assignments repository, fetch any changes from the remote repository and switch to the assignment basic branch:
+Next, you should make sure you have the most recent version of the starter code from the `assignments-mirror` repo. To update your local repo, you should pull any changes from the mirror repo into your master branch:
 
 ```
 $ cd ~/cs107e_home/assignments
-$ git fetch origin
-$ git checkout assign1-basic
+$ git checkout master
+$ git pull starter-code master
 ```
 
-Once you switch to the `assign1-basic` branch, a new file `Makefile` and a folder `src` will be added to your directory. The `src` folder will always contain all your source code for each assignment, and the file named `Makefile` will always be at the root of your assignment repo. The file `src/apps/larson.s` is the file in which you will write your code for the assignment. The starter version of `larson.s` is simply a copy of `blink.s` from lab. 
+Now that you have the starter code, you should create a new branch named `assign1-basic`:
 
-{% include callout.html type="info" %}
-You'll notice that `larson.s` lives in the `src/apps` subdirectory. You might think that having a hierarchy of directories for such a simple assigmnent is overkill, and indeed it is. However, as the quarter progresses and you knock down the assignments one by one, you'll build up a lot of `.c` and `.s` files in your assignments repo. Rather than dealing with a whole mess of files at a single level of your repo, we opted to organize the files into logically named subdirectories. Navigating a few extra directories now may be a little frustrating, but we think that it'll make your life much easier in the assignments to come. (The hierarchy of directories also has the advantage of showing you how C projects "in the wild" are structured.)
-</div>
+```
+$ git checkout -b assign1-basic
+```
 
-The starter files include a file named `Makefile`. This is a build script similar to the `doit` scripts you saw in lecture&mdash;it will use the `arm-none-eabi-as` and `arm-none-eabi-objcopy` utilities to compile your `larson.s` into a `larson.bin` file that you can install to the Pi. To use the Makefile to build your project, run `make` from the command line in the directory containing the Makefile, e.g.
+You can check that you're on this new branch by running `git branch`. 
+
+Now that your repo has the latest version of the starter code and is on the
+right branch, take a peek at what's in your repo using `ls`. 
+
+The `src` directory contains the source code for each assignment and is split up
+into four subdirectories: `apps`, `boot`, `lib`, and `tests`. 
+- `apps` contains the app--the program that you'll actually run on your Pi--for 
+  each of the assignments that you'll complete this quarter. 
+- `boot` contains a few files required to successfully load and launch a program.
+  You can ignore these files for now. `
+- `lib` contains the modules that you'll implement as part of your effort toward
+  building a fully functioning computer by the end of quarter.
+- `tests` contains the unit tests that you'll write to test your modules. 
+
+You won't write any library modules for this first assignment, so you can focus
+in on `src/apps`. Inside of it, you'll find `larson.s`, which is simply a copy of
+`blink.s` from lab. You'll modify this file as you implement your Larson
+scanner.
+
+Take a peek at the `makefiles` directory. You'll notice that it contains seven files,
+all ending in the `.makefile` suffix. Each file corresponds to a different
+assignment. You can think of a makefile as a recipe that contains the
+instructions for how to build your code. To invoke a makefile, we use the `make`
+program, which expects to find a filed named `Makefile` in the directory from
+which `make` was executed. You may notice that you're missing such a file. To
+resolve this, we're going to create a symbolic link (also called a soft link)
+that will point from `Makefile` to `makefiles/assign1.makefile`. This will
+simultaneously please the `make` program and remove the need for us to maintain
+two separate versions of our current makefile. To create this symbolic link, do
+the following:
+
+```
+$ cd ~/cs107e_home/assignments
+$ ls
+$ ln -sf $(pwd)/makefiles/assign1.makefile $(pwd)/Makefile
+$ ls -l 
+```
+
+Before running `ln` (the link command), there will be no `Makefile` at the top
+level of your assignments repo. After running `ln`, you'll notice that there is
+a `Makefile`, and that it points to `makefiles/assign1.makefile`. Neat! You can
+now build your code using `make` and run the resulting program on your Pi using
+`make install`:
 
 ```
 $ make
@@ -112,9 +153,11 @@ $ make install
 rpi-install.py build/bin/larson.bin
 ```
 
-For now, don't worry about how `make` works. We'll go through Makefiles in-depth in the next lab.
+If you're wondering how `make` and makefiles work, sit tight! We'll cover
+makefiles in-depth in the next lab.
 
-If you build the starter program and install it on the Pi, it will blink GPIO 20. This GPIO is wired to the leftmost LED of the scanner on a correctly-wired breadboard.  Confirm this on your setup and you're now ready to write your scanner program!
+Once you build and run the starter program on your Pi, confirm that it blinks
+GPIO 20. Now, you're ready to write your scanner!
 
 ### 4. Configure scanner GPIOs
 The starter program is a copy of the `blink.s` you studied in lab 1. This program configures the single pin GPIO 20 and enters an infinite loop to set and clear that pin. Carefully review this code and be sure you understand how it accomplishes its tasks. Ask questions if anything is unclear! Your job is to modify this program to instead blink the scanner sequence.  
@@ -136,32 +179,69 @@ Here is a short video of our 8-LED scanner in action:
 
 <iframe width="420" height="236" src="https://www.youtube-nocookie.com/embed/vhDcb7lxCF4?modestbranding=1&version=3&loop=1&playlist=vhDcb7lxCF4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Writing clean, readable assembly code is a challenge. Commenting is essential!  Be sure to choose good label names and add named constants using `.equ` to aid readability. You should write the program without any function calls (because we haven't taught you how to create and call functions in assembly language yet). Although you cannot use functions, you can still strive for clarity in your design.
+Writing clean, readable assembly code is a challenge. Commenting is essential!  
+Be sure to choose good label names and add named constants using `.equ` to aid readability.
+Because you don't know how to write functions yet in assembly, you'll need to
+write your program without the aid of this useful abstraction. Even without
+functions, you can still attain a clear and intuitive design.
 
-Minimize the uses of branches in assembly. Straight-line code is code without branches
-and is almost always easier to understand. However, a downside of straight-line code is that there
-may be a lot of code duplication. Try to factor your code to remove repeated code.
-Here there is a trade-off between less code and clearer code. Above all, strive for code that can be
-easily understood, whether it's by you six months from now or by us in a week when we grade your assignment.
+To maximize the clarity of your assembly code, minimize the use of branches in. 
+Straight-line code is code without branches and is almost always easier
+to understand. However, a downside of straight-line code is that there may be a 
+lot of code duplication. Try to factor your code to remove repeated code.
+Here there is a trade-off between less code and clearer code. Above all, strive 
+for code that can be easily understood, whether it's by you six months from now 
+or by us in a week when we grade your assignment. Either way, enjoy tackling the
+interesting compromises inherent in software design.
 
-If you have time, experiment with different ways to structure the code. (Be sure to use git commits to separately track your explorations!) Of the options you considered, which approach seems most clear to you and why?
+If you have time, experiment with different ways to structure the code. (Be sure
+to use git commits to separately track your explorations!) Of the options you 
+considered, which approach seems most clear to you and why?
 
 Besides being understandable, good code should be easy to extend and maintain.
-A rule of thumb for style is that if your code is well-designed, it should take little additional code to extend it from 4 to 8 LEDs, ideally just changing a constant.
+A rule of thumb for style is that if your code is well-designed, it should take 
+little additional code to extend it from 4 to 8 LEDs, ideally just changing a constant.
 
-Be sure to commit the final version of your code and push to GitHub.
+Congratulations on completing your first step on the path to bare-metal mastery!
+Sit back and enjoy the show by turning off the lights and impressing your
+friends.
 
-Congratulations on completing your first step on the path to bare-metal mastery! Sit back and enjoy the show. Turn off the lights and impress your friends. 
+
+## Submission
+Because you've been committing regularly throughout the development process--even
+if you haven't been, we're going to pretend that you have because it helps 
+all of us sleep at night--all you need to do now is ensure that your final changes made
+it into your last commit, push those commits to your remote repo on GitHub, and
+open a pull request on GitHub. You created a new branch locally, which means you
+need to run the special version of the `git push` command that we say in assignment 
+0. This is a process known in Git as setting the "upstream" reference for the new
+local branch. 
+
+```
+$ git push --set-upstream origin assign1-basic
+```
+
+Once you push for the first time to your new branch, you can use plain old `git
+push` on all subsequent pushes to this branch.
+
+Once you've pushed your final version, open a pull request in GitHub just like
+you did in assignment 0. Ensure that you're opening a pull request to merge
+`assign1-basic` into `master` and give the pull request an intuitive title like
+"Submit assign1-basic".
+
+{% include callout.html type="danger" %}
+Don't forget to open a pull request! We need you to open a pull request so that
+we can grade your assignment.
+</div>
+
+If you want a refresher on the steps required to open a pull request, see 
+the [Assignment 0 writeup](/assignments/assign0/)
 
 ## Extension
 
-The basic part of this assignment should not take too long once you
-understand ARM assembly.
-
-If you want to explore further, extend the program.
-The extension is more challenging, and
-may involve using additional ARM assembly instructions.
-It will almost certainly require more complicated code
+If you enjoyed the basic part and want to explore further, go ahead and extend
+the program. The extension is more challenging, and may involve using additional
+ARM assembly instructions. It will almost certainly require more complicated code
 involving conditional branches.
 
 <!---
@@ -187,35 +267,33 @@ the
 
 You should have at least three distinct levels of brightness.
 
-Before starting on an extension, be sure you have first committed and pushed a working copy of your basic code on the `assign1-basic` branch. Now create a new branch for the extension:
+Before starting on an extension, be sure that you've submitted the basic portion
+of the assignment. Now create a new branch for the extension:
 
-    $ git checkout -b assign1-extension
+```
+$ git checkout -b assign1-extension
+```
 
-Commit and push your changes for the extension on this new branch. Implement the extension by modifying the `larson.s` file. DO NOT create any new files for the extension.
+{% include callout.html type="info" %}
+Remember to set the upstream reference for your new branch. This will require
+using the fancier version of the `git push` command that we saw above: 
+```
+$ git push --set-upstream origin assign1-extension
+```
+</div>
 
-*Note*
-When you create a new branch locally, you'll need to push that branch to your GitHub repo online. This is a process called setting the "upstream" reference for this branch in git. In order to do this, the first time you push to your new branch, you'll need to use the following special push command after adding and commiting your changes
+Once you've finished the extension, be sure to open a new pull request for
+merging `assign1-extension` into `master`. Again, give the pull request an
+intuitive title like "Submit assign1-extension".
 
-    $ git push --set-upstream origin assign1-extension
-    
-After the first time you push to your new branch, you can just use the push command normally.
+## Grading
+To grade your submission, your beloved CAs will invoke `make` to build your `larson.bin`
+file and test it on a Pi with the LEDs plugged in. For this process to go smoothly,
+please ensure the following:
 
-    $ git push
+- You can successfully invoke `make` without any build warnings or errors.
+- You use pins 20-23 or 20-27 (depending on how many LEDs you chose to use).
 
-## Submit and automated check
-Submit the finished version of your assignment by making a git "pull request"
-from the `assign1-basic` branch to `master`, following the steps given in the
-[Assignment 0 writeup](/assignments/assign0/).  If you implemented the
-extension, create a separate pull request for `assign1-extension`
-into `master`.
-
-*NOTE*
-If you don't create a pull request for your assignment, it won't be graded. Make sure you create a pull request for both your basic and extension branchs on each assignment. If you forget to create a pull request, there will be an automatic __0.5 points deducted from your assignment automatically.__ If you're confused about what a pull request is or why you need to create one, feel free to reach out to us either on Piazza or via the staff mailing list. 
-
-To grade your submission, the human grader will invoke `make` to build your larson.bin file and test it on a Raspberry Pi with the LEDs plugged in. For this process to go smoothly, your project must successfully build as submitted, without any errors or warnings. There are no automated tests setup on your repo right now, but make sure that your project:
-
-- `make` runs successfully in the clean testing environment
-- You use pins 20 - 27 for your scanner (depending on how many LEDs you use)
-- You have a Makefile (the same one that was included in the starter code)
-
-If the human grader needs to go into your repo and edit your code manually for `make` to successfully run, there will be an __automatic deduction of 1 point from your assignment grade__. 
+If the CA grading your assignments needs to go into your repo and edit your code
+manually for `make` to successfully run, there will be an __automatic deduction 
+of 0.5 points from your assignment grade__. More importantly, we will be sad.

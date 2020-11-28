@@ -11,11 +11,13 @@ We prepared these guides on various topics relevant to CS107E students. Hope you
 - [Unix command line](unix)
 - [Recommendations for hand tools](handtools)
 
+### Kit and Tools
+- [CS107E Bill of Materials (BOM)](bom)
+
 ### Installation
 - [Installing the development environment on your laptop](install)
 
 ### Raspberry Pi
-- [Kit inventory](bom)
 - [Raspberry Pi pinout diagram](images/pinout.pdf) (also available as postcard in your kit and poster on lab wall)
 - [Powering the Pi](power)
 - [Working with SD cards](sd)
@@ -23,6 +25,7 @@ We prepared these guides on various topics relevant to CS107E students. Hope you
 - [Reset the Pi without unplugging](reset-button)
 
 ### Development tools/process
+- [Git](git)
 - [Bare metal programming using gcc](gcc) 
 - [Using make for ARM cross-development](make)
 - [Using gdb in simulation mode](gdb)

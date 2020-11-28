@@ -2,7 +2,7 @@
 #include "echo.h"
 #include "gpio.h"
 #include "gpioextra.h"
-#include "interrupts.h"
+#include "gpio_interrupts.h"
 #include "keyboard.h"
 
 #define BUTTON_GPIO GPIO_PIN21
@@ -15,6 +15,7 @@ static bool button_pressed(unsigned int pc)
 {
     if (gpio_check_and_clear_event(BUTTON_GPIO)) {
         gCount++;
+        console_printf("%3d ", gCount);
         return true;
     }
     return false;
@@ -38,6 +39,7 @@ void main(void)
     interrupts_init();
     interrupts_register_handler(INTERRUPTS_GPIO3, button_pressed);
     interrupts_global_enable();
+    interrupts_enable_source(INTERRUPTS_GPIO3);
 
     console_init(NROWS, NCOLS);
     console_printf("\n\nWaiting for button click...\n");

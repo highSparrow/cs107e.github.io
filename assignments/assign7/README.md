@@ -59,30 +59,50 @@ project. Right on!
 
 ## Get starter files
 
-Change to the `cs107e.github.io` repository in your `cs107e_home` and
-do a `git pull` to ensure your courseware files are up to date.
+To ensure that your courseware files are up to date, do a pull in the `cs107e.github.io`
+repo. 
 
-To get the assignment starter code, change to your local repository,
-fetch any changes from the remote and switch to the assignment basic
-branch:
+```
+$ cd ~/cs107e_home/cs107e.github.io
+$ git pull
+```
+
+To ensure that you have the latest starter code, change to your local assignments
+repo, checkout the master branch, and pull from the starter code remote.
+
 ```
 $ cd ~/cs107e_home/assignments
-$ git fetch origin
-$ git checkout assign7-basic
+$ git checkout master
+$ git pull starter-code master
 ```
 
-You should also verify you have the up-to-date contents for all of
-your modules: `timer.c`, `gpio.c`,`strings.c`, `printf.c`, `malloc.c`,
-`backtrace.c`, `keyboard.c`, `shell.c`, `fb.c`, `gl.c`, and
-`console.c`.  If you are missing changes from a previous assignment
-branch (e.g. commits from a regrade submission), have your
-`assign7-basic` checked out and use checkout to incorporate changes from
-the desired branch (e.g. `git checkout assign6-basic -- src/lib/console.c`).
+Now create your `assign7-basic` branch, merge in your work from `assign6-basic`,
+and create the `Makefile` symlink.
 
-This assignment adds three more modules: `interrupts_asm.s` and
-`bits_asm.s` from Lab 7, and `gpio_interrupts.c`. Make sure you copy
-these into into your `src/lib` directory. You can now add these modules to
-your code, or, as usual, use the reference ones if you prefer.
+```
+$ git checkout -b assign7-basic
+$ git merge assign6-basic
+$ ls -l Makefile
+$ ln -sf $(pwd)/makefiles/assign7.makefile $(pwd)/Makefile
+```
+
+Verify that your `assign7-basic` branch has up-to-date versions of your modules 
+`timer.c`, `gpio.c`,`strings.c`, `printf.c`, `malloc.c`, `backtrace.c`, `keyboard.c`,
+`shell.c`, `fb.c`, `gl.c`, and `console.c`.  
+
+Here are the files of intereste for this week:
+- `src/lib/interrupts_asm.s`: you'll implement the required function within this
+  file.
+- `src/lib/bits_asm.s`: you'll implement the required function within this file.
+- `src/lib/gpio_interrupts.c`: you'll implement the required functions in this
+  module.
+- `src/tests/test_keyboard_interrupts.c`: you'll add tests to this file to
+  verify that your implementation works as expected.
+- `src/apps/interrupts_console_shell.c`: you'll leave this file unchanged but
+  use it as a sample application to test your modules.
+
+You implemented `interrupts_asm.s` and `bits_asm.s` in Lab 7, and so you can
+copy those into your `src/lib` directory.
 
 __Pay careful attention to the assignment 7 Makefile__: The starter
 Makefile assumes that you are going for the complete system bonus and
@@ -122,8 +142,8 @@ and read the data bit from the data pin.
 
 To add this functionality to your libpi, you'll need to do three things:
 
-  - Use the assembly you wrote in lab for the core interrupt handling routine.
-  - Write a GPIO interrupt library. Because all of the GPIO pins share a
+- Use the assembly you wrote in lab for the core interrupt handling routine.
+- Write a GPIO interrupt library. Because all of the GPIO pins share a
   single interrupt, you need to add another layer of dispatch to allow
   software to register handlers on a per-pin level. The library, when it
   handles the GPIO interrupt, checks to see which pins have have pending
@@ -132,15 +152,14 @@ To add this functionality to your libpi, you'll need to do three things:
   you'll leverage your assembly proficiency to write a function with the ARM `clz`
   instruction, which computes how many leading zeroes there are (the first
   1 bit set).
-  - Update your keyboard driver to use interrupts instead of spin loops.
+- Update your keyboard driver to use interrupts instead of polling loops.
   This involves using a ring buffer to store scan codes, so you can safely
   share state between interrupt mode and supervisor mode code. 
 
-To get started, read over the code in the starter
-`tests/test_keyboard_interrupts.c` and try it out with your existing
-keyboard driver. You should see that your code drops any keys typed while
-the test program is paused inside `timer_delay`. Using interrupts in
-your keyboard driver will fix this.
+To get started, read over the code in the starter `src/tests/test_keyboard_interrupts.c`
+and try it out with your existing keyboard driver. You should see that your code
+drops any keys typed while the test program is paused inside `timer_delay`. Using
+interrupts in your keyboard driver will fix this.
 
 ### 1) Write a GPIO interrupt handling library
 
@@ -172,12 +191,12 @@ keyboard will be very difficult. Test enabling and disabling GPIO
 interrupts, registering handlers on pins in both banks, and that
 you can handle two interrupts that arrive at the same time (hook
 a button up to two pins in parallel). Spending an hour now to
-write 3-4 good test may save you hours of debugging later.
+write 3-4 good tests may save you hours of debugging later.
 
 ### 2) Set up keyboard interrupts
 
 Recall that we sample the PS/2 data line on a falling edge on the
-clock line. In `ps2_init`, configure the PS/2 clock pin to trigger an interrupt
+clock line. In `keyboard_init`, configure the PS/2 clock pin to trigger an interrupt
 on a falling edge (using the API in `gpio_extra.h`) and register a 
 handler for it. You should enable GPIO
 interrupts in the PS/2 module and enable global interrupts in main: this
@@ -212,7 +231,13 @@ of execution state.
 
 Once you're receiving scan codes, you're ready to enqueue them for mainline code to fetch!
 
-(As a side note, our reference version of the keyboard module supports reading in either polling mode or by interrupts. It defaults to polling and can be switched into interrupt mode by calling the function `keyboard_use_interrupts()`. Your keyboard does not need to support this. You can directly re-purpose your previous code to read scancodes to instead read via interrupts without trying to preserve the old way of doing things.)
+{% include callout.html type="info" %}
+Our reference version of the keyboard module supports reading in either polling
+mode or by interrupts. It defaults to polling and can be switched into interrupt
+mode by calling the function `keyboard_use_interrupts()`. Your keyboard does not
+need to support this. You can directly re-purpose your previous code to read scancodes
+to instead read via interrupts without trying to preserve the old way of doing things.)
+</div>
 
 ### 4) Use ring buffer
 
@@ -250,30 +275,44 @@ performance exercise from lab 7 has roused your interest in
 optimization, we'd love to see what you can do to improve the
 responsiveness. A few ideas to consider:
 
-- Inner loops are the first place to look for speed-up opportunities (e.g. hoisting out redundant work, streamlining operations, loop unrolling). With a million pixels on the line, cutting 10 instructions per pixel totals to a full second of time saved.
-- Every call to `gl_draw_char` calls `font_get_char` to re-extract the character from the font bitmap. Try doing the extract just once per unique char and cache to re-use later?
-- Vertical scroll is particularly painful because of the need to redraw the entire screen. Rather than recalculate/redraw all the text, you could copy the previously drawn pixels upward. Or wackier, what about a framebuffer variant that simply adjusts the y_offset to get scrolling for "free" and defers paying the cost of a full redraw until hit virtual bottom?
+- Inner loops are the first place to look for speed-up opportunities (e.g. hoisting
+  out redundant work, streamlining operations, loop unrolling). With a million pixels
+  on the line, cutting 10 instructions per pixel totals to a full second of time
+  saved.
+- Every call to `gl_draw_char` calls `font_get_char` to re-extract the character
+  from the font bitmap. Try doing the extract just once per unique char and cache
+  to re-use later?
+- Vertical scroll is particularly painful because of the need to redraw the entire
+  screen. Rather than recalculate/redraw all the text, you could copy the previously
+  drawn pixels upward. Or wackier, what about a framebuffer variant that simply
+  adjusts the y_offset to get scrolling for "free" and defers paying the cost of
+  a full redraw until hit virtual bottom?
 
 ## Complete system bonus
-The `make lib` target of the Makefile bundles the files named in `MY_MODULES` into a single library `libmypi.a`.
+The `make lib` target of the Makefile bundles the files named in `MY_MODULES` into
+a single library `libmypi.a`.
 
-If your `libmypi.a` uses all your own modules for this assignment (no use of reference modules) and your interrupt-driven console works correctly, 
-you receive a full 10-point bonus. This is a big reward for a big 
-accomplishment! If you fulfill this bonus, you've successfully built a complete
-computer system from the ground up, and every line of code for that system is sitting in your assignments folder. Congratulations!
+To be considered for the system bonus, `libmypi.a `must use your own code for all modules.
+We will not re-test your individual modules to the extent that they were tested 
+when grading each assignment, but all shell/console functionality must work correctly.
+This means, for example, your `printf` must handle printing padded hexadecimal numbers
+(which are needed for `peek`), but need not necessarily handle negative values perfectly
+(since they are not used by the shell).
 
-To be considered for the bonus, `libmypi.a `must use your own code
-for all modules. We will not re-test your individual modules to the extent that they were
-tested when grading each assignment, but all shell/console functionality must work correctly. This means, for example, your `printf` must handle
-printing padded hexadecimal numbers (which are needed for `peek`), but
-need not necessarily handle negative values perfectly (since they are
-not used by the shell).
+If your `libmypi.a` uses all your own modules for this assignment (no use of reference
+modules) and your interrupt-driven console works correctly, you receive a full 10-point
+bonus. This is a big reward for a big accomplishment! If you fulfill this bonus,
+you've successfully built a complete computer system from the ground up, and every
+line of code for that system is sitting in your assignments repo. Congratulations!
 
-That `libmypi.a` library packages up all your battle-tested code in a form ready to be incorporated into any future project.  The directory 
-`cs107e.github.io/assignments/assign7/libmypi-usage` contains a template project that demonstrates how to build an application using your `libmypi.a`.
+That `libmypi.a` library packages up all your battle-tested code in a form ready
+to be incorporated into any future project.  The directory `cs107e.github.io/assignments/assign7/libmypi-usage`
+contains a template project that demonstrates how to build an application using 
+your `libmypi.a`.
 
-To start a new project, make a copy of the template project and copy in
-your `libmypi.a`. file  Use `make install` to build and run.  You can now program your Pi almost like an Arduino with this high-level library you wrote.
+To start a new project, make a copy of the template project and copy in your `libmypi.a`.
+file  Use `make install` to build and run.  You can now program your Pi almost like
+an Arduino with this high-level library you wrote.
 
 ## Extensions
 
@@ -299,18 +338,25 @@ the more times the interrupt handler will be called with that PC.
 A profile is created by creating a histogram that counts
 the number of times the program is interrupted at each PC.
 
-For this extension, you will configure periodic timer interrupts to sample the PC and print a histogram of the PC values. You will also add a new command to your shell run your profiler.
+For this extension, you will configure periodic timer interrupts to sample the `pc`
+and print a histogram of the PC values. You will also add a new command to your 
+shell run your profiler.
 
 The header file `cs107e/include/gprof.h` declares the interface to the
 profiling functions.
 
-The profiling will maintain an array of counters, one for each instruction address in the text (code) section.
+The profiling will maintain an array of counters, one for each instruction address
+in the text (code) section.
 
-There is a known address where the text section starts (what value is
-that again?), but to know the extent of the text, you will need to edit the linker map to mark the end.  It may help to revisit [lab4](/labs/lab4/) for
-information on linker maps.
+There is a known address where the text section starts (what value is that again?),
+but to know the extent of the text, you will need to edit the linker map to mark
+the end.  It may help to revisit [lab4](/labs/lab4/) for information on linker maps.
 
-Open the `memmap` file and, patterning after how symbols are used to mark the bounds of the bss section, add a symbol to identify the end of the text section. Use this symbol in `gprof_init` to compute the correct amount of space needed to have a counter for each instruction in the text section. All of those counters should be initialized to zero at the start of profiling.
+Open the `memmap` file and, patterning after how symbols are used to mark the bounds
+of the bss section, add a symbol to identify the end of the text section. Use this
+symbol in `gprof_init` to compute the correct amount of space needed to have a counter
+for each instruction in the text section. All of those counters should be initialized
+to zero at the start of profiling.
 
 `gprof_init` configures a timer interrupt scheduled for the
 interval defined in `gprof.c` using our `armtimer` module.  (See
@@ -319,7 +365,7 @@ the header file
 argument, the value of the PC at the time of the interrupt, and will increment the counter for that value of the PC.
 
 Add the command `profile [on | off | status | results]` to
-your shell commands. `profile on` should initialize or zero-out all profile
+your shell commands. `profile on` should initialize (zero-out) all profile
 counts and start profiling (enable timer interrupts). `profile off` should stop
 the profiling (disable timer interrupts). `profile status` should print `Status:
 on` or `Status: off`, depending on whether the profiler is on or off,
@@ -327,13 +373,23 @@ respectively. `profile results` should print current (if status is on) or most
 recent (if status is off) counts to the debugger console using the `gprof_dump`
 function. The `gprof_dump` should print the highest 10 counts to the console (in any order).
 
-The final touch for your profiler is to provide the function name that each high-count instruction belongs to. If you remember the `name_of` function you wrote for assignment 4, the compiler has embedded each function's name as a string of characters before its first instruction. You can find the function's name by walking backwards in memory from the instruction to find the "magic" byte that marks where name is stored.
+The final touch for your profiler is to provide the function name that each high-count
+instruction belongs to. If you remember the `name_of` function you wrote for assignment
+4, the compiler has embedded each function's name as a string of characters before
+its first instruction. You can find the function's name by walking backwards in memory
+from the instruction to find the "magic" byte that marks where name is stored.
 
-For each high-count instruction, you should report the address of the instruction, the name of the function it belongs to, the instruction offset within the function, and the count of samples recorded for that instruction. Thus your profiler results look something like this:
+For each high-count instruction, you should report the address of the instruction,
+the name of the function it belongs to, the instruction offset within the function,
+and the count of samples recorded for that instruction. Thus your profiler results
+look something like this:
 
-    0x0000ae0c uart_putchar+36: 13358
-    0x0000be1c timer_get_ticks+16: 23219
-    0x0000be5c timer_delay_us+24: 36209
+```
+0x0000ae0c uart_putchar+36: 13358
+0x0000be1c timer_get_ticks+16: 23219
+0x0000be5c timer_delay_us+24: 36209
+```
+
 
 Cool, you now have a profiler!
 
@@ -347,9 +403,9 @@ provided one starter file, `mouse.c`, but you'll add files around it
 so that the `paint` directory is actually a complete standalone
 application, with its own `Makefile` and everything.
 
-Copy the starter project files in
-`cs107e.github.io/assignments/assign7/libmypi-usage` into `paint`,
-and copy your finished `libmypi.a` in as well. Add the starter file `mouse.c` to the project and edit the Makefile to add `mouse.o` to the list of `OBJECTS`.
+Copy the starter project files in `cs107e.github.io/assignments/assign7/libmypi-usage`
+into `paint`, and copy your finished `libmypi.a` in as well. Add the starter file
+`mouse.c` to the project and edit the Makefile to add `mouse.o` to the list of `OBJECTS`.
 
 Make sure you can build and run the "Hello, world" application right
 now.
@@ -412,44 +468,42 @@ README how we should use your paint program!
 ## Submit
 The deliverables for `assign7-basic` are:
 
-  - A reworked `keyboard.c` module that uses interrupts
+  - A reworked `keyboard.c` module that uses GPIO interrupts
   - Completed versions of all your previous modules (if to be considered for system bonus)
-  - Your tests in `tests/test_keyboard_interrupts.c`
+  - Your tests in `src/tests/test_keyboard_interrupts.c`
 
-Submit the finished version of your assignment by making a git “pull request”. Make separate pull requests for your basic and extension submissions.
+Submit the finished version of your assignment by making a git “pull request”. Make
+separate pull requests for your basic and extension submissions.
 
-Make sure you add all the necessary source files to Git so that we can
-clone your assignment and build and run it. If you are aiming for the complete system bonus, double-check that your Makefile lists all modules in `MY_MODULES` and that the updated versions of your files are added and committed to the repository. If you are submitting the paint extension, be sure all of the needed files in your paint subdirectory are committed as well.
+If you are aiming for the complete system bonus, double-check that your Makefile
+lists all modules in `MY_MODULES` and that the updated versions of your files are
+added and committed to the repository. If you are submitting the paint extension,
+be sure all of the needed files in your paint subdirectory are committed as well.
 
-One means to verify what was included with your submission is to push and then clone it again from GitHub in a separate `assign7-clone` folder.  Build and run from this clone to be sure all essential files are present.
-
-
-The automated checks make sure that we can run your C
-code and test and grade it properly, including swapping your tests for
-ours.
-
-CI verifies that:
-
-- `apps/interrupts_console_shell.c` is unchanged
-
-- `make` and `make test` successfully build
-
-- `make test` also successfully builds with the unchanged version of the test program in the starter
+One means to verify what was included with your submission is to push and then clone
+it again from GitHub in a separate `assign7-clone` folder.  Build and run from this
+clone to be sure all essential files are present.
 
 ## Grading
 To grade this assignment, we will:
 
-- Verify that your submission builds correctly, with no warnings. Warnings and/or build errors result in automatic deductions. Clean build always!
-- Interactively test your full console program running with a PS/2 keyboard and HDMI monitor.
+- Verify that your submission builds correctly, with no warnings. Warnings and/or
+  build errors result in automatic deductions. Clean build always!
+- Interactively test your full console program running with a PS/2 keyboard and
+  HDMI monitor.
 - Review your code and provide feedback on your design and style choices.
 
 
 ## Course learning goals
 
 
-__Three cheers for YOU!__ 👏👏 👏 This is __your__ computer system, the one you built yourself from the ground up. Each line of code is there because you put it there, you know what it does, and why it is needed. We are in awe of the effort you put in to arrive here and hope you are as proud of your work as we are.
+__Three cheers for YOU!__ 👏👏 👏 This is __your__ computer system, the one you built
+yourself from the ground up. Each line of code is there because you put it there,
+you know what it does, and why it is needed. We are in awe of the effort you put
+in to arrive here and hope you are as proud of your work as we are.
 
-Reflecting on where you started, it has been an impressive journey. Take stock of the progress you have made on mastering these course learning goals:
+Reflecting on where you started, it has been an impressive journey. Take stock of
+the progress you have made on mastering these course learning goals:
 
 ✔︎ __To understand how computers represent information, execute programs, and control peripherals__
 - Binary and hexadecimal number systems, machine encoding of instructions
@@ -465,9 +519,7 @@ Reflecting on where you started, it has been an impressive journey. Take stock o
 - Strategies for testing and debugging code, using gdb
 - Establishing a productive and effective programming workflow
 
-Bring these skills into the final project, mix with your creativity and initiative, and something fabulous will surely result. We're looking forward to it!
+Bring these skills into the final project, mix with your creativity and initiative,
+and something fabulous will surely result. We're looking forward to it!
 
 ![yoda](images/yoda.gif)
-
-
-`

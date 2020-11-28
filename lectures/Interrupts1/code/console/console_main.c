@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "shell.h"
 #include "uart.h"
+#include "reset_keyboard.h"
 
 /* This program tests the keyboard using the console.
  * Console reads from the keyboard and displays on screen.
@@ -16,6 +17,7 @@ void main(void)
     gpio_init();
     uart_init();
     keyboard_init(KEYBOARD_CLOCK, KEYBOARD_DATA);
+    ps2_write(PS2_CMD_RESET);
     console_init(30, 50);
     shell_init(console_printf);
 

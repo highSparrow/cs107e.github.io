@@ -10,7 +10,14 @@ static volatile unsigned int n_timer_interrupts = 0;
 static volatile unsigned int a = 0;
 static volatile unsigned int b = 0;
 
-bool timer_event(unsigned int pc) {
+bool timer_event_simple(unsigned int pc) {
+    armtimer_check_and_clear_interrupt();
+    n_timer_interrupts++;
+    printf("Timer interrupt %06d, pc=%x\n", n_timer_interrupts,pc);
+    return true;
+} 
+
+bool timer_event_race(unsigned int pc) {
     armtimer_check_and_clear_interrupt();
     n_timer_interrupts++;
     a++;
@@ -27,12 +34,12 @@ void main(void) {
     timer_init();
     gpio_init();
     uart_init();
-    interrupts_init();
+    interrupts_init(); 
 
-    armtimer_init(2000);
+    armtimer_init(20000);
     armtimer_enable();
 
-    interrupts_register_handler(INTERRUPTS_BASIC_ARM_TIMER_IRQ, timer_event);
+    interrupts_register_handler(INTERRUPTS_BASIC_ARM_TIMER_IRQ, timer_event_race); 
 
     armtimer_enable_interrupts();
     interrupts_enable_source(INTERRUPTS_BASIC_ARM_TIMER_IRQ);
